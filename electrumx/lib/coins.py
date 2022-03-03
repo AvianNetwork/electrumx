@@ -4011,3 +4011,18 @@ class Syscoin(AuxPowMixin, Coin):
     RPC_PORT = 8370
     REORG_LIMIT = 2000
     CHUNK_SIZE = 360
+
+class Avian(Coin):
+    NAME = "Avian"
+    SHORTNAME = "AVN"
+    NET = "mainnet"
+    P2PKH_VERBYTE = bytes.fromhex("44")
+    P2SH_VERBYTES = (bytes.fromhex("7A"),)
+    WIF_BYTE = bytes.fromhex("80")
+    GENESIS_HASH = ('000000cdb10fc01df7fba251f2168ef7'
+                    'cd7854b571049db4902c315694461dd0')
+    RPC_PORT = 7896
+    TX_COUNT = 1
+    TX_COUNT_HEIGHT = 1
+    TX_PER_BLOCK = 1
+    REORG_LIMIT = 5000
