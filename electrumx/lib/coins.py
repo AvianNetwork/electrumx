@@ -4026,3 +4026,16 @@ class Avian(Coin):
     TX_COUNT_HEIGHT = 1
     TX_PER_BLOCK = 1
     REORG_LIMIT = 5000
+
+    @classmethod
+    def header_hash(cls, header):
+        timestamp = util.unpack_le_uint32_from(header, 68)[0]
+        if timestamp >= 1638847407: # dual algo
+            import x16rt_hash
+            return x16rt_hash.getPoWHash(header)
+        elif timestamp >= 1638748799: # x16rt
+            import x16rt_hash
+            return x16rt_hash.getPoWHash(header)
+        else:
+            import x16r_hash
+            return x16r_hash.getPoWHash(header)
