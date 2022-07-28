@@ -11,6 +11,8 @@ ElectrumX - Reimplementation of electrum-server
   :Language: Python (>= 3.8)
   :Original Author: Neil Booth
 
+This fork of ElectrumX supports Avian.
+
 This project is a fork of `kyuupichan/electrumx <https://github.com/kyuupichan/electrumx>`_.
 The original author dropped support for Bitcoin, which we intend to keep.
 
