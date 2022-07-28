@@ -22,6 +22,15 @@ arbitrary addresses. The server can be exposed publicly, and joined to the publi
 of servers via peer discovery. As of May 2020, a significant chunk of the public
 Electrum server network runs ElectrumX.
 
+Install
+=======
+
+Install module:
+``python setup.py install``
+
+Edit and run this file:
+``./run-electrumx.sh``
+
 Documentation
 =============
 
