@@ -12,6 +12,7 @@ export DB_DIRECTORY=~/.electrumx/db
 export SSL_CERTFILE=~/.electrumx/certfile.crt
 export SSL_KEYFILE=~/.electrumx/keyfile.key
 export BANNER_FILE=~/.electrumx/banner
+export SERVICES=tcp://:50001,rpc://
 
 # run electrumx
 ./electrumx_server
