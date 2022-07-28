@@ -19,3 +19,12 @@ python3 setup.py install --user
 cd ../
 rm master.tar.gz
 rm -rf x16rt_hash-master
+
+# minotaurx
+curl -L https://github.com/alamshafil/minotaurx_hash/archive/master.tar.gz --output master.tar.gz
+tar zxf master.tar.gz
+cd minotaurx_hash-master
+python3 setup.py install --user
+cd ../
+rm master.tar.gz
+rm -rf minotaurx_hash-master
