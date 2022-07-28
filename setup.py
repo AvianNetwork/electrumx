@@ -7,7 +7,7 @@ setuptools.setup(
     scripts=['electrumx_server', 'electrumx_rpc', 'electrumx_compact_history'],
     python_requires='>=3.8',
     install_requires=['aiorpcX[ws]>=0.22.0,<0.23', 'attrs',
-                      'plyvel', 'pylru', 'aiohttp>=3.3,<4', 'x16r-hash', 'x16rt-hash'],
+                      'plyvel', 'pylru', 'aiohttp>=3.3,<4', 'x16rt-hash'],
     extras_require={
         'dev': ['objgraph'],
         'rapidjson': ['python-rapidjson>=0.4.1,<2.0'],
@@ -24,7 +24,6 @@ setuptools.setup(
         'zny-yespower-0-5': ['zny-yespower-0-5'],
         'bell-yespower': ['bell-yespower'],
         'cpupower': ['cpupower'],
-        'x16r-hash': ['x16r-hash'],
         'x16rt-hash': ['x16rt-hash'],
     },
     packages=setuptools.find_packages(include=('electrumx*',)),
