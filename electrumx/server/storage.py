@@ -9,21 +9,20 @@
 
 import os
 from functools import partial
-from typing import Type
 
-import electrumx.lib.util as util
+from electrumx.lib import util
 
 
-def db_class(name) -> Type['Storage']:
+def db_class(name):
     '''Returns a DB engine class.'''
-    for db_class in util.subclasses(Storage):
-        if db_class.__name__.lower() == name.lower():
-            db_class.import_module()
-            return db_class
-    raise RuntimeError(f'unrecognised DB engine "{name}"')
+    for db_class_ in util.subclasses(Storage):
+        if db_class_.__name__.lower() == name.lower():
+            db_class_.import_module()
+            return db_class_
+    raise RuntimeError('unrecognised DB engine "{}"'.format(name))
 
 
-class Storage:
+class Storage(object):
     '''Abstract base class of the DB backend abstraction.'''
 
     def __init__(self, name, for_sync):
@@ -68,13 +67,15 @@ class Storage:
         '''
         raise NotImplementedError
 
+# pylint:disable=W0223
+
 
 class LevelDB(Storage):
     '''LevelDB database engine.'''
 
     @classmethod
     def import_module(cls):
-        import plyvel
+        import plyvel    # pylint:disable=E0401
         cls.module = plyvel
 
     def open(self, name, create):
@@ -90,12 +91,19 @@ class LevelDB(Storage):
                                    sync=True)
 
 
+# pylint:disable=E1101
+
+
 class RocksDB(Storage):
     '''RocksDB database engine.'''
 
+    def __init__(self, *args):
+        self.db = None
+        super().__init__(*args)
+
     @classmethod
     def import_module(cls):
-        import rocksdb
+        import rocksdb    # pylint:disable=E0401
         cls.module = rocksdb
 
     def open(self, name, create):
@@ -122,7 +130,7 @@ class RocksDB(Storage):
         return RocksDBIterator(self.db, prefix, reverse)
 
 
-class RocksDBWriteBatch:
+class RocksDBWriteBatch(object):
     '''A write batch for RocksDB.'''
 
     def __init__(self, db):
@@ -137,7 +145,7 @@ class RocksDBWriteBatch:
             self.db.write(self.batch)
 
 
-class RocksDBIterator:
+class RocksDBIterator(object):
     '''An iterator for RocksDB.'''
 
     def __init__(self, db, prefix, reverse):

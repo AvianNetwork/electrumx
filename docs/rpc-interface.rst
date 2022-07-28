@@ -69,7 +69,7 @@ A typical result is as follows (with annotated comments)::
 
   $ electrumx_rpc getinfo
   {
-      "coin": "Bitcoin",
+      "coin": "BitcoinSegwit",
       "daemon": "127.0.0.1:9334/",
       "daemon height": 572154,         # The daemon's height when last queried
       "db height": 572154,             # The height to which the DB is flushed
@@ -87,9 +87,7 @@ A typical result is as follows (with annotated comments)::
       "request counts": {              # Count of RPC requests by method name
           "blockchain.block.header": 245,
           "blockchain.block.headers": 70,
-          "blockchain.estimatefee": 12776,
           "blockchain.headers.subscribe": 2825,
-          "blockchain.relayfee": 740,
           "blockchain.scripthash.get_history": 196,
           "blockchain.scripthash.subscribe": 184626,
           "blockchain.transaction.broadcast": 19,
@@ -97,7 +95,6 @@ A typical result is as follows (with annotated comments)::
           "blockchain.transaction.get_merkle": 289,
           "getinfo": 3,
           "groups": 1,
-          "mempool.get_fee_histogram": 3194,
           "server.add_peer": 9,
           "server.banner": 740,
           "server.donation_address": 754,
@@ -136,10 +133,10 @@ Apart from very short intervals, typically after a new block or when a client ha
 connected, the number of unprocessed requests should be low, say 250 or fewer.  If it is
 over 1,000 the server is overloaded.
 
-Sessions are put into groups, primarily as an anti-DoS measure. Each session goes into
-a group based on its IP subnet (e.g. /24 for IPv4). Each member of a group incurs a fraction
-of the costs of the other group members. This appears in the `sessions_` list under the
-column XCost.
+Sessions are put into groups, primarily as an anti-DoS measure.  Currently each session
+goes into two groups: one for an IP subnet, and one based on the timeslice it connected
+in.  Each member of a group incurs a fraction of the costs of the other group members.
+This appears in the `sessions_` list under the column XCost.
 
 groups
 ------

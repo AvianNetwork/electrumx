@@ -5,11 +5,7 @@ Authors
 
 * Neil Booth
 
-  Original creator, past maintainer.
-
-* Electrum developers
-
-  Current maintainers.
+  Creator and maintainer.
 
 * Johann Bauer
 
@@ -18,3 +14,7 @@ Authors
 * John Jegutanis
 
   Alt-chain integrations.
+
+* kralverde
+
+  Ravencoin conversion

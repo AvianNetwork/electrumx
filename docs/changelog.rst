@@ -2,34 +2,74 @@
  ChangeLog
 ===========
 
+.. note:: you **must** add the following line to your bitcoin.conf file::
 
-Version 1.16.0 (10 Dec 2020)
+      rest=1
+
+   I strongly recommend also adding::
+
+      rpcservertimeout=120 (not yet for Ravencoin)
+
+   If you see messages in your logs about truncated messages whilst syncing, you may need to
+   increase the timeout (in seconds) further.
+
+Version 1.10.0 RVN (12 JAN 2021)
 ============================
 
-Note: this is the first release since forking from kyuupichan/electrumx.
-kyuupichan has the :code:`electrumx` name on PyPI, so we needed a new name there.
-We are using the `e-x <https://pypi.org/project/e-x/>`_ name on PyPI, so you can
-install this package via e.g. :code:`pip install e-x`.
+* Tweaked Restricted, Qualifier, and Broadcast message support
 
-* security: a vulnerability has been fixed that allowed a remote attacker to
-  crash electrumx if peer discovery was enabled (`#22`_)
-* fixed some peer-discovery-related bugs (e.g. `#35`_)
-* ENV: when using Bitcoin, the COIN ENV var can now be set to :code:`Bitcoin`.
-  For compatibility, using :code:`BitcoinSegwit` will also keep working.
-  (`#5`_)
-* session resource limits: made more useful in general. connection-time-based
-  grouping has been removed (`#70`_). Disconnects of over-limit sessions happen
-  sooner (`4b3f6510`_). Subnet sizes for IP-based grouping can now be
-  configured (`a61136c5`_).
-* protocol: :code:`mempool.get_fee_histogram` now returns fee rates with
-  0.1 sat/byte resolution instead of 1 sat/byte, and the compact histogram
-  is calculated differently. (`#67`_)
-* performance: bitcoind is now queried less frequently as estimatefee,
-  relayfee, and server.banner requests are now cached (`#24`_)
-* performance: json ser/deser is now abstracted away and the :code:`ujson` and
-  :code:`rapidjson` exras can be used for somewhat faster block processing.
-  (`#11`_)
-* multiple other small performance improvements
+Version 1.20.0 (21 Oct 2021)
+============================
+
+* get blocks via the REST API from bitcoind, and process them incrementally and in a separate
+  thread
+* support for TSC merkle proofs (AustEcon)
+* sockets tweak (rt1212121)
+
+
+Version 1.19.2 RVN (4 OCT 2021)
+============================
+
+* Added Restricted Asset and Channel Asset support
+
+Version 1.18.1 RVN (14 May 2021)
+============================
+
+* Added Ravencoin specific protocol
+* Added Ravencoin asset support
+* PUBKEYSIGs are now picked up by the server
+
+Version 1.19.0 (11 Jun 2021)
+============================
+
+* disconnect excessive resource usage sessions faster (SomberNight)
+* better handling of task groups to reduce memory usage and report errors properly
+* add MAX_RECV environment variable defaulting to 5 million bytes
+
+
+Version 1.18.1 (26 Apr 2021)
+============================
+
+* Fix unclean and stalled shutdowns
+* Cleanup lock handling
+* Process blocks one at a time
+* Remove dead code
+
+
+Version 1.17.0 (04 Feb 2021)
+============================
+
+* Fix a couple of issues raised by pylint
+
+
+Version 1.16.0 (03 Feb 2021)
+============================
+
+* Require Python 3.8.
+* Bitcoin only (BSV).
+* Disable resource limits for private sessions (ghost43).
+* Various bug fixes (jtarthur, ghost43) particularly in peer discovery.
+* other: AustEcon, Roger Taylor, Franco Benner
 
 
 Version 1.15.0 (27 May 2020)
@@ -175,14 +215,7 @@ Version 1.9.0 (10 Jan 2019)
 * other minor tweaks (Michael Schmoock, Michael Taborsky)
 
 
-Original author of ElectrumX:
-
 **Neil Booth**  kyuupichan@gmail.com  https://github.com/kyuupichan
-
-This fork maintained by:
-
-**Electrum developers** electrumdev@gmail.com  https://github.com/spesmilo
-
 
 .. _#554: https://github.com/kyuupichan/electrumx/issues/554
 .. _#566: https://github.com/kyuupichan/electrumx/issues/566
@@ -195,16 +228,3 @@ This fork maintained by:
 .. _#731: https://github.com/kyuupichan/electrumx/issues/731
 .. _#795: https://github.com/kyuupichan/electrumx/issues/795
 .. _#909: https://github.com/kyuupichan/electrumx/issues/909
-
-
-.. _#5:   https://github.com/spesmilo/electrumx/pull/5
-.. _#11:  https://github.com/spesmilo/electrumx/pull/11
-.. _#22:  https://github.com/spesmilo/electrumx/issues/22
-.. _#24:  https://github.com/spesmilo/electrumx/pull/24
-.. _#35:  https://github.com/spesmilo/electrumx/pull/35
-.. _#67:  https://github.com/spesmilo/electrumx/pull/67
-.. _#70:  https://github.com/spesmilo/electrumx/pull/70
-
-
-.. _4b3f6510:  https://github.com/spesmilo/electrumx/commit/4b3f6510e94670a013c1abe6247cdd2b0e7e6f8c
-.. _a61136c5:  https://github.com/spesmilo/electrumx/commit/a61136c596d6a0290a6be9d21fb7c095c3cea21e

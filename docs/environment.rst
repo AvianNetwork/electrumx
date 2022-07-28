@@ -22,7 +22,7 @@ These environment variables are always required:
 .. envvar:: COIN
 
   Must be a :attr:`NAME` from one of the :class:`Coin` classes in
-  `lib/coins.py`_. For example, ``Bitcoin``.
+  `lib/coins.py`_.
 
 .. envvar:: DB_DIRECTORY
 
@@ -105,7 +105,7 @@ Here are some examples of valid services::
   rpc://                                # RPC protocol, default host and port
 
 .. note:: ElectrumX will not serve any incoming connections until it has fully caught up
-          with your bitcoin daemon.  The only exception is local **RPC** connections,
+          with your ravencoin daemon.  The only exception is local **RPC** connections,
           which are served at any time after the server has initialized.
 
 .. envvar:: SERVICES
@@ -237,7 +237,7 @@ These environment variables are optional:
   + ``$DONATION_ADDRESS`` is replaced with the address from the
     :envvar:`DONATION_ADDRESS` environment variable.
 
-  See `here <https://github.com/shsmith/electrumx-banner-updater>`_
+  See `here <https://github.com/Electrum-RVN-SIG/electrumx-banner-updater>`_
   for a script that updates a banner file periodically with useful
   statistics about fees, last block time and height, etc.
 
@@ -281,14 +281,6 @@ These environment variables are optional:
   version string. For example to drop versions from 1.0 to 1.2 use
   the regex ``1\.[0-2]\.\d+``.
 
-.. envvar:: DROP_CLIENT_UNKNOWN
-
-  Set to anything non-empty to deny serving clients which do not
-  identify themselves first by issuing the server.version method
-  call with a non-empty client identifier. The connection is dropped 
-  on first actual method call. This might help to filter out simple 
-  robots. This behavior is off by default.
-
 
 Resource Usage Limits
 =====================
@@ -309,11 +301,7 @@ raise them.
 
 .. envvar:: MAX_RECV
 
-  The maximum size of an incoming message in bytes, the default is 1,000,000 bytes.
-  Note that the smallest sane/safe value for Bitcoin is ~800,100 bytes,
-  as the largest standard tx can have a weight of 400K but the protocol hex-encodes that,
-  plus there is a few bytes of protocol overhead. Setting this to lower than that
-  would preclude clients from broadcasting txs that could propagate over the network.
+  The maximum size of an incoming message in bytes, the default is 5,000,000 bytes.
 
 .. envvar:: MAX_SEND
 
@@ -327,9 +315,9 @@ raise them.
   served all at once or not at all, an obvious avenue for abuse.
   :envvar:`MAX_SEND` is a stop-gap until the protocol is improved to
   admit incremental history requests.  Each history entry is
-  approximately 100 bytes, so the default is equivalent to a history
+  approximately 100 bytes so the default is equivalent to a history
   limit of around 10,000 entries, which should be ample for most
-  legitimate users.  If you use a higher default, bear in mind one
+  legitimate users.  If you use a higher default bear in mind one
   client can request history for multiple addresses.  Also note that
   the largest raw transaction you will be able to serve to a client is
   just under half of :envvar:`MAX_SEND`, as each raw byte becomes 2
@@ -340,15 +328,13 @@ raise them.
 .. envvar:: COST_HARD_LIMIT
 .. envvar:: REQUEST_SLEEP
 .. envvar:: INITIAL_CONCURRENT
-.. envvar:: SESSION_GROUP_BY_SUBNET_IPV4
-.. envvar:: SESSION_GROUP_BY_SUBNET_IPV6
 
   All values are integers. :envvar:`COST_SOFT_LIMIT` defaults to :const:`1,000`,
   :envvar:`COST_HARD_LIMIT` to :const:`10,000`, :envvar:`REQUEST_SLEEP` to :const:`2,500`
   milliseconds, and :envvar:`INITIAL_CONCURRENT` to :const:`10` concurrent requests.
 
   The server prices each request made to it based upon an estimate of the resources needed
-  to process it.  Factors include whether the request uses bitcoind, how much bandwidth
+  to process it.  Factors include whether the request uses ravend, how much bandwidth
   it uses, and how hard it hits the databases.
 
   To set a base for the units, a :func:`blockchain.scripthash.subscribe` subscription to
@@ -372,10 +358,6 @@ raise them.
 
   If a session disconnects, ElectrumX continues to associate its cost with its IP address,
   so if it immediately reconnects it will re-acquire its previous cost allocation.
-  Moreover, sessions are also grouped together based on their IP address subnets, and cost
-  is accrued for the whole group. What subnet sizes to use can be configured via
-  :envvar:`SESSION_GROUP_BY_SUBNET_IPV4` (by default /24) and
-  :envvar:`SESSION_GROUP_BY_SUBNET_IPV6` (by default /48).
 
   A server operator should experiment with different values according to server loads.  It
   is not necessarily true that e.g. having a low soft limit, decreasing concurrency and
@@ -418,7 +400,7 @@ If you are not running a Tor proxy ElectrumX will be unable to connect
 to onion server peers, in which case rather than returning no onion
 peers it will fall back to a hard-coded list.
 
-To give incoming clients a full range of onion servers, you will need
+To give incoming clients a full range of onion servers you will need
 to be running a Tor proxy for ElectrumX to use.
 
 ElectrumX will perform peer-discovery by default and announce itself
@@ -470,11 +452,6 @@ some of this.
   will autodetect any proxy running on the usual ports 9050 (Tor),
   9150 (Tor browser bundle) and 1080 (socks).
 
-.. envvar:: BLACKLIST_URL
-
-  URL to retrieve a list of blacklisted peers.  If not set, a coin-
-  specific default is used.
-
 
 Cache
 =====
@@ -504,5 +481,11 @@ your available physical RAM:
 
   I do not recommend raising this above 2000.
 
-.. _lib/coins.py: https://github.com/spesmilo/electrumx/blob/master/electrumx/lib/coins.py
+.. envvar:: WRITE_BAD_VOUTS_TO_FILE
+
+  For chain debugging.
+
+  Write any outpoints that could not be parsed into the database to file.
+
+.. _lib/coins.py: https://github.com/Electrum-RVN-SIG/electrumx-ravencoin/blob/master/electrumx/lib/coins.py
 .. _uvloop: https://pypi.python.org/pypi/uvloop

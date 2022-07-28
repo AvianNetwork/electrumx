@@ -33,13 +33,20 @@ from electrumx.lib.util import bytes_to_int, int_to_bytes, hex_to_bytes
 
 _sha256 = hashlib.sha256
 _new_hash = hashlib.new
-_hmac_digest = hmac.digest
+_new_hmac = hmac.new
 HASHX_LEN = 11
 
 
 def sha256(x):
     '''Simple wrapper of hashlib sha256.'''
     return _sha256(x).digest()
+
+
+def ripemd160(x):
+    '''Simple wrapper of hashlib ripemd160.'''
+    h = _new_hash('ripemd160')
+    h.update(x)
+    return h.digest()
 
 
 def double_sha256(x):
@@ -64,7 +71,7 @@ class Base58Error(Exception):
     '''Exception used for Base58 errors.'''
 
 
-class Base58:
+class Base58(object):
     '''Class providing base 58 functionality.'''
 
     chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
@@ -75,7 +82,7 @@ class Base58:
     def char_value(c):
         val = Base58.cmap.get(c)
         if val is None:
-            raise Base58Error(f'invalid base 58 character "{c}"')
+            raise Base58Error('invalid base 58 character "{}"'.format(c))
         return val
 
     @staticmethod
@@ -128,7 +135,7 @@ class Base58:
         be_bytes = Base58.decode(txt)
         result, check = be_bytes[:-4], be_bytes[-4:]
         if check != hash_fn(result)[:4]:
-            raise Base58Error(f'invalid base 58 checksum for {txt}')
+            raise Base58Error('invalid base 58 checksum for {}'.format(txt))
         return result
 
     @staticmethod

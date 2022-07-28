@@ -1,14 +1,14 @@
-'''Test of compaction code in server/history.py'''
+# Test of compaction code in server/history.py
+
 import array
+import asyncio
 import random
 from os import environ, urandom
 
-import pytest
-
 from electrumx.lib.hash import HASHX_LEN
 from electrumx.lib.util import pack_be_uint16, pack_le_uint64
-from electrumx.server.env import Env
 from electrumx.server.db import DB
+from electrumx.server.env import Env
 
 
 def create_histories(history, hashX_count=100):
@@ -98,7 +98,6 @@ def check_written(history, histories):
         db_hist = array.array('I', history.get_txnums(hashX, limit=None))
         assert hist == db_hist
 
-
 def compact_history(history):
     '''Synchronously compact the DB history.'''
     history.comp_cursor = 0
@@ -111,11 +110,7 @@ def compact_history(history):
         write_size += history._compact_history(limit)
     assert write_size != 0
 
-
-@pytest.mark.asyncio
-async def test_compaction(tmpdir):
-    db_dir = str(tmpdir)
-    print(f'Temp dir: {db_dir}')
+async def run_test(db_dir):
     environ.clear()
     environ['DB_DIRECTORY'] = db_dir
     environ['DAEMON_URL'] = ''
@@ -131,3 +126,9 @@ async def test_compaction(tmpdir):
     check_written(history, histories)
     compact_history(history)
     check_written(history, histories)
+
+def test_compaction(tmpdir):
+    db_dir = str(tmpdir)
+    print('Temp dir: {}'.format(db_dir))
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(run_test(db_dir))

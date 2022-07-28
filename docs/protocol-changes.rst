@@ -159,10 +159,71 @@ Changes
     Non-AuxPoW chains are unaffected.
 
 
-Version 1.4.2
+Version 1.4.1
 =============
 
 New methods
 -----------
 
-  * :func:`blockchain.scripthash.unsubscribe` to unsubscribe from a script hash.
+  * :func:`blockchain.scipthash.unsubscribe` to unsubscribe from a script hash.
+
+
+Version 1.8.0
+=============
+
+New methods
+-----------
+
+  * :func:`blockchain.scripthash.get_asset_balance`
+  * :func:`blockchain.scripthash.listassets`
+  * :func:`blockchain.asset.get_meta`
+  * :func:`blockchain.asset.subscribe`
+  * :func:`blockchain.asset.unsubscribe`
+
+Version 1.9.0
+=============
+
+New methods
+-----------
+
+  * :func:`blockchain.asset.is_qualified`
+  * :func:`blockchain.asset.get_restricted_associations_current`
+  * :func:`blockchain.asset.get_restricted_associations_history`
+  * :func:`blockchain.asset.get_qualifier_associations_current`
+  * :func:`blockchain.asset.get_qualifier_associations_history`
+  * :func:`blockchain.asset.get_tags_for_h160_current`
+  * :func:`blockchain.asset.get_tags_for_h160_history`
+  * :func:`blockchain.asset.get_h160_for_asset_current`
+  * :func:`blockchain.asset.get_h160_for_asset_history`
+  * :func:`blockchain.asset.frozen_status_current`
+  * :func:`blockchain.asset.frozen_status_history`
+  * :func:`blockchain.asset.broadcasts`
+  * :func:`blockchain.asset.get_assets_with_prefix`
+  * :func:`blockchain.asset.list_addresses_by_asset`
+
+Version 1.10.0
+==============
+
+New methods
+-----------
+
+  * :func:`blockchain.asset.check_tag`
+  * :func:`blockchain.asset.all_tags`
+  * :func:`blockchain.asset.is_frozen`
+  * :func:`blockchain.asset.validator_string`
+  * :func:`blockchain.asset.restricted_associations`
+
+Removed methods
+---------------
+
+  * :func:`blockchain.asset.is_qualified`
+  * :func:`blockchain.asset.get_restricted_associations_current`
+  * :func:`blockchain.asset.get_restricted_associations_history`
+  * :func:`blockchain.asset.get_qualifier_associations_current`
+  * :func:`blockchain.asset.get_qualifier_associations_history`
+  * :func:`blockchain.asset.get_tags_for_h160_current`
+  * :func:`blockchain.asset.get_tags_for_h160_history`
+  * :func:`blockchain.asset.get_h160_for_asset_current`
+  * :func:`blockchain.asset.get_h160_for_asset_history`
+  * :func:`blockchain.asset.frozen_status_current`
+  * :func:`blockchain.asset.frozen_status_history`

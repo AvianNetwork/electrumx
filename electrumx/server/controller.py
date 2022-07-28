@@ -4,20 +4,21 @@
 #
 # See the file "LICENCE" for information about the copyright
 # and warranty status of this software.
-
 from asyncio import Event
 
-from aiorpcx import _version as aiorpcx_version
+from aiorpcx import _version as aiorpcx_version, TaskGroup
 
 import electrumx
+import electrumx.server.block_processor as block_proc
 from electrumx.lib.server_base import ServerBase
-from electrumx.lib.util import version_string, OldTaskGroup
+from electrumx.lib.util import version_string
+from electrumx.server.daemon import Daemon
 from electrumx.server.db import DB
 from electrumx.server.mempool import MemPool, MemPoolAPI
 from electrumx.server.session import SessionManager
 
 
-class Notifications:
+class Notifications(object):
     # hashX notifications come from two sources: new blocks and
     # mempool refreshes.
     #
@@ -30,13 +31,17 @@ class Notifications:
     # block is done.  This object handles that logic by deferring
     # notifications appropriately.
 
+    # pylint:disable=E0202
+
     def __init__(self):
         self._touched_mp = {}
         self._touched_bp = {}
+        self._reissued_assets_mp = {}
+        self._reissued_assets_bp = {}
         self._highest_block = -1
 
     async def _maybe_notify(self):
-        tmp, tbp = self._touched_mp, self._touched_bp
+        tmp, tbp, tassetsmp, tassetsbp = self._touched_mp, self._touched_bp, self._reissued_assets_mp, self._reissued_assets_bp
         common = set(tmp).intersection(tbp)
         if common:
             height = max(common)
@@ -52,24 +57,35 @@ class Notifications:
             del tmp[old]
         for old in [h for h in tbp if h <= height]:
             touched.update(tbp.pop(old))
-        await self.notify(height, touched)
 
-    async def notify(self, height, touched):
+        touched_assets = tassetsmp.pop(height)
+        for old in [h for h in tmp if h <= height]:
+            del tassetsmp[old]
+        for old in [h for h in tassetsbp if h <= height]:
+            touched_assets.update(tassetsbp.pop(old))
+
+        await self.notify(height, touched, touched_assets)
+
+    async def notify(self, height, touched, assets):
         pass
 
     async def start(self, height, notify_func):
         self._highest_block = height
         self.notify = notify_func
-        await self.notify(height, set())
+        await self.notify(height, set(), set())
 
-    async def on_mempool(self, touched, height):
+    async def on_mempool(self, touched, height, reissued):
         self._touched_mp[height] = touched
+        self._reissued_assets_mp[height] = reissued
         await self._maybe_notify()
 
-    async def on_block(self, touched, height):
+    async def on_block(self, touched, height, reissued):
         self._touched_bp[height] = touched
+        self._reissued_assets_bp[height] = reissued
         self._highest_block = height
         await self._maybe_notify()
+
+# pylint:disable=W0201
 
 
 class Controller(ServerBase):
@@ -82,7 +98,7 @@ class Controller(ServerBase):
         '''Start the RPC server and wait for the mempool to synchronize.  Then
         start serving external clients.
         '''
-        if not (0, 22, 0) <= aiorpcx_version < (0, 23):
+        if not (0, 22) <= aiorpcx_version < (0, 23):
             raise RuntimeError('aiorpcX version 0.22.x is required')
 
         env = self.env
@@ -94,24 +110,23 @@ class Controller(ServerBase):
         self.logger.info(f'reorg limit is {env.reorg_limit:,d} blocks')
 
         notifications = Notifications()
-        Daemon = env.coin.DAEMON
-        BlockProcessor = env.coin.BLOCK_PROCESSOR
-
+    
         async with Daemon(env.coin, env.daemon_url) as daemon:
             db = DB(env)
-            bp = BlockProcessor(env, db, daemon, notifications)
+            bp = block_proc.BlockProcessor(env, db, daemon, notifications)
 
             # Set notifications up to implement the MemPoolAPI
             def get_db_height():
-                return db.db_height
+                return db.state.height
             notifications.height = daemon.height
             notifications.db_height = get_db_height
             notifications.cached_height = daemon.cached_height
             notifications.mempool_hashes = daemon.mempool_hashes
             notifications.raw_transactions = daemon.getrawtransactions
             notifications.lookup_utxos = db.lookup_utxos
+            notifications.lookup_assets = db.lookup_assets
             MemPoolAPI.register(Notifications)
-            mempool = MemPool(env.coin, notifications)
+            mempool = MemPool(env, notifications)
 
             session_mgr = SessionManager(env, db, bp, daemon, mempool,
                                          shutdown_event)
@@ -128,7 +143,12 @@ class Controller(ServerBase):
                 await group.spawn(db.populate_header_merkle_cache())
                 await group.spawn(mempool.keep_synchronized(mempool_event))
 
-            async with OldTaskGroup() as group:
+            async with TaskGroup() as group:
                 await group.spawn(session_mgr.serve(notifications, mempool_event))
                 await group.spawn(bp.fetch_and_process_blocks(caught_up_event))
+                await group.spawn(bp.check_cache_size_loop())
                 await group.spawn(wait_for_catchup())
+
+                async for task in group:
+                    if not task.cancelled():
+                        task.result()

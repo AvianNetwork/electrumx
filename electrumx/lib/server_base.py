@@ -16,14 +16,10 @@ import sys
 import time
 from contextlib import suppress
 from functools import partial
-from typing import TYPE_CHECKING
 
 from aiorpcx import spawn
 
 from electrumx.lib.util import class_logger
-
-if TYPE_CHECKING:
-    from electrumx.server.env import Env
 
 
 class ServerBase:
@@ -39,9 +35,9 @@ class ServerBase:
                                         'SSL error in data received|'
                                         'socket.send() raised exception')
     SUPPRESS_TASK_REGEX = re.compile('accept_connection2')
-    PYTHON_MIN_VERSION = (3, 7)
+    PYTHON_MIN_VERSION = (3, 8)
 
-    def __init__(self, env: 'Env'):
+    def __init__(self, env):
         '''Save the environment, perform basic sanity checks, and set the
         event loop policy.
         '''
@@ -58,7 +54,7 @@ class ServerBase:
         # Sanity checks
         if sys.version_info < self.PYTHON_MIN_VERSION:
             mvs = '.'.join(str(part) for part in self.PYTHON_MIN_VERSION)
-            raise RuntimeError(f'Python version >= {mvs} is required')
+            raise RuntimeError('Python version >= {} is required'.format(mvs))
 
         if platform.system() == 'Windows':
             pass
@@ -69,7 +65,7 @@ class ServerBase:
                                'To continue as root anyway, restart with '
                                'environment variable ALLOW_ROOT non-empty')
 
-    async def serve(self, shutdown_event: asyncio.Event):
+    async def serve(self, shutdown_event):
         '''Override to provide the main server functionality.
         Run as a task that will be cancelled to request shutdown.
 

@@ -15,19 +15,28 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-VERSION="ElectrumX 1.16.0"
+
+from electrumx import version
+
 
 # -- Project information -----------------------------------------------------
 
-project = 'ElectrumX'
-copyright = '2016-2020, various'
-author = 'Electrum developers'
+project = 'ElectrumX Ravencoin'
+copyright = '2016-2020, Neil Booth; 2020, kralverde'
+author = 'Neil Booth; kralverde'
 
 # The full version including branding
-release = VERSION
+release = version
 # The short X.Y version
-version = VERSION.split()[-1]
+version = version.split()[-1]
 
+# class Mock(MagicMock):
+#    @classmethod
+#    def __getattr__(cls, name):
+#        return MagicMock()
+
+#MOCK_MODULES = ['kawpow']
+#sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 # -- General configuration ---------------------------------------------------
 
@@ -81,8 +90,8 @@ html_theme = 'alabaster'
 # documentation.
 #
 html_theme_options = {
-    'description': 'Lightweight Electrum Server in Python',
-    'github_user': 'spesmilo',
+    'description': 'Lightweight Electrum Ravencoin Server in Python',
+    'github_user': 'Electrum-RVN-SIG',
     'github_repo': 'electrumx',
     'github_button': True,
     'github_type': 'star',
@@ -138,8 +147,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ElectrumX.tex', 'ElectrumX Documentation',
-     'Neil Booth', 'manual'),
+    (master_doc, 'ElectrumX.tex', 'ElectrumX Ravencoin Documentation',
+     'Neil Booth, kralverde', 'manual'),
 ]
 
 
@@ -148,7 +157,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'electrumx', 'ElectrumX Documentation',
+    (master_doc, 'electrumx', 'ElectrumX Ravencoin Documentation',
      [author], 1)
 ]
 
@@ -159,7 +168,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ElectrumX', 'ElectrumX Documentation',
+    (master_doc, 'ElectrumX', 'ElectrumX Ravencoin Documentation',
      author, 'ElectrumX', 'One line description of project.',
      'Miscellaneous'),
 ]

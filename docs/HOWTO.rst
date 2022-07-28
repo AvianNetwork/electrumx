@@ -15,7 +15,7 @@ small - pull requests are welcome.
 ================ ========================
 Package          Notes
 ================ ========================
-Python3          ElectrumX uses asyncio.  Python version >= 3.8 is
+Python3          ElectrumX uses asyncio.  Python version >= 3.7 is
                  **required**.
 `aiohttp`_       Python library for asynchronous HTTP.  Version >=
                  2.0 required.
@@ -25,19 +25,18 @@ DB Engine        A database engine package is required; two are
 ================ ========================
 
 Some coins need an additional package, typically for their block hash
-functions. For example, `x11_hash`_ is required for DASH. Scrypt coins
-require a Python interpreter compiled and/or linked with OpenSSL 1.1.0
-or higher.
+functions.  For example, `x11_hash`_ is required for DASH.
 
-You **must** be running a non-pruning bitcoin daemon with::
+You **must** to be running a non-pruning ravencoin daemon with::
 
   txindex=1
+  assetindex=1
 
 set in its configuration file.  If you have an existing installation
-of bitcoind and have not previously set this you will need to reindex
+of ravend and have not previously set this you will need to reindex
 the blockchain with::
 
-  bitcoind -reindex
+  ravend -reindex
 
 which can take some time.
 
@@ -53,28 +52,24 @@ used to either.
 When building the database from the genesis block, ElectrumX has to
 flush large quantities of data to disk and its DB.  You will have a
 better experience if the database directory is on an SSD than on an
-HDD.  Currently to around height 611,600 of the Bitcoin blockchain the
+HDD.  Currently to around height 1,750,000 of the Ravencoin blockchain the
 final size of the leveldb database, and other ElectrumX file metadata
-comes to just over 46.9GB (43.7 GiB).  LevelDB needs a bit more for
+comes to just over 3GB.  LevelDB needs a bit more for
 brief periods, and the block chain is only getting longer, so I would
-recommend having at least 70-80GB of free space before starting.
+recommend having at least 5GB of free space before starting.
 
 Database Engine
 ===============
 
 You can choose from LevelDB and RocksDB to store transaction
 information on disk.  The time taken and DB size is not significantly
-different.  We tried to support LMDB, but its history write performance
+different.  We tried to support LMDB but its history write performance
 was much worse.
 
 You will need to install one of:
 
-+ `plyvel <https://plyvel.readthedocs.io/en/latest/installation.html>`_ for LevelDB.
-
-  Included as part of a regular pip or ``setup.py`` installation of ElectrumX.
-+ `python-rocksdb <https://pypi.python.org/pypi/python-rocksdb>`_ for RocksDB
-
-  ``pip3 install python-rocksdb`` or use the rocksdb extra install option to ElectrumX.
++ `plyvel <https://plyvel.readthedocs.io/en/latest/installation.html>`_ for LevelDB
++ `python-rocksdb <https://pypi.python.org/pypi/python-rocksdb>`_ for RocksDB (`pip3 install python-rocksdb`)
 + `pyrocksdb <http://pyrocksdb.readthedocs.io/en/v0.4/installation.html>`_ for an unmaintained version that doesn't work with recent releases of RocksDB
 
 Running
@@ -84,23 +79,11 @@ Install the prerequisites above.
 
 Check out the code from Github::
 
-    git clone https://github.com/spesmilo/electrumx.git
+    git clone https://github.com/Electrum-RVN-SIG/electrumx-ravencoin.git
     cd electrumx
 
-You can install with::
-
-    pip3 install .
-
-There are many extra Python dependencies available to fit the needs of your
-system or coins. For example, to install the RocksDB dependencies and a faster
-JSON parsing library::
-
-    pip3 install .[rocksdb,ujson]
-
-see setup.py's ``extra_requires`` for a complete list.
-
-You can also run the code from the source tree or a copy of it.
-
+You can install with :file:`setup.py` or run the code from the source
+tree or a copy of it.
 
 You should create a standard user account to run the server under;
 your own is probably adequate unless paranoid.  The paranoid might
@@ -439,11 +422,11 @@ You can then set the port as follows and advertise the service externally on the
     REPORT_SSL_PORT=110
 
 
-.. _`contrib/systemd/electrumx.service`: https://github.com/spesmilo/electrumx/blob/master/contrib/systemd/electrumx.service
+.. _`contrib/systemd/electrumx.service`: https://github.com/Electrum-RVN-SIG/electrumx-ravencoin/blob/master/contrib/systemd/electrumx.service
 .. _`daemontools`: http://cr.yp.to/daemontools.html
 .. _`runit`: http://smarden.org/runit/index.html
 .. _`aiohttp`: https://pypi.python.org/pypi/aiohttp
 .. _`pylru`: https://pypi.python.org/pypi/pylru
 .. _`x11_hash`: https://pypi.python.org/pypi/x11_hash
-.. _`contrib/raspberrypi3/install_electrumx.sh`: https://github.com/spesmilo/electrumx/blob/master/contrib/raspberrypi3/install_electrumx.sh
-.. _`contrib/raspberrypi3/run_electrumx.sh`: https://github.com/spesmilo/electrumx/blob/master/contrib/raspberrypi3/run_electrumx.sh
+.. _`contrib/raspberrypi3/install_electrumx.sh`: https://github.com/Electrum-RVN-SIG/electrumx-ravencoin/blob/master/contrib/raspberrypi3/install_electrumx.sh
+.. _`contrib/raspberrypi3/run_electrumx.sh`: https://github.com/Electrum-RVN-SIG/electrumx-ravencoin/blob/master/contrib/raspberrypi3/run_electrumx.sh

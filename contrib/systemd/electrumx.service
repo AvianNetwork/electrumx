@@ -1,11 +1,11 @@
 [Unit]
 Description=Electrumx
-After=network.target
+After=network.target network-online.target
+Wants=network-online.target
 
 [Service]
 EnvironmentFile=/etc/electrumx.conf
-ExecStart=/usr/local/bin/electrumx_server
-ExecStop=/usr/local/bin/electrumx_rpc -p 8000 stop
+ExecStart=/home/electrumx/electrumx/electrumx_server
 User=electrumx
 LimitNOFILE=8192
 TimeoutStopSec=30min

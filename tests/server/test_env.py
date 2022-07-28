@@ -5,11 +5,10 @@ import random
 import re
 
 import pytest
-
 from aiorpcx import Service, NetAddress
-from electrumx.server.env import Env, ServiceError
-import electrumx.lib.coins as lib_coins
 
+import electrumx.lib.coins as lib_coins
+from electrumx.server.env import Env, ServiceError
 
 BASE_DAEMON_URL = 'http://username:password@hostname:321/'
 BASE_DB_DIR = '/some/dir'
@@ -42,13 +41,12 @@ def assert_default(env_var, attr, default):
     assert getattr(e, attr) == 'foo'
 
 
-def assert_integer(
-        env_var, attr, default='', *, min_value=5, max_value=2000):
+def assert_integer(env_var, attr, default=''):
     setup_base_env()
     if default != '':
         e = Env()
         assert getattr(e, attr) == default
-    value = random.randrange(min_value, max_value)
+    value = random.randrange(5, 2000)
     os.environ[env_var] = str(value) + '.1'
     with pytest.raises(Env.Error):
         Env()
@@ -62,10 +60,10 @@ def assert_boolean(env_var, attr, default):
     assert getattr(e, attr) == default
     os.environ[env_var] = 'foo'
     e = Env()
-    assert getattr(e, attr) is True
+    assert getattr(e, attr) == True
     os.environ[env_var] = ''
     e = Env()
-    assert getattr(e, attr) is False
+    assert getattr(e, attr) == False
 
 
 def test_minimal():
@@ -98,49 +96,6 @@ def test_COIN_NET():
     os.environ['NET'] = ' testnet '
     e = Env()
     assert e.coin == lib_coins.BitcoinSVTestnet
-    os.environ.pop('NET')
-    os.environ['COIN'] = ' Litecoin '
-    e = Env()
-    assert e.coin == lib_coins.Litecoin
-    os.environ['NET'] = 'testnet'
-    e = Env()
-    assert e.coin == lib_coins.LitecoinTestnet
-    os.environ.pop('NET')
-    os.environ['COIN'] = ' BitcoinGold '
-    e = Env()
-    assert e.coin == lib_coins.BitcoinGold
-    os.environ['NET'] = 'testnet'
-    e = Env()
-    assert e.coin == lib_coins.BitcoinGoldTestnet
-    os.environ['NET'] = 'regtest'
-    e = Env()
-    assert e.coin == lib_coins.BitcoinGoldRegtest
-    os.environ.pop('NET')
-    os.environ['COIN'] = ' Decred '
-    e = Env()
-    assert e.coin == lib_coins.Decred
-    os.environ['NET'] = 'testnet'
-    e = Env()
-    assert e.coin == lib_coins.DecredTestnet
-    os.environ.pop('NET')
-    os.environ['COIN'] = ' BitcoinGreen '
-    e = Env()
-    assert e.coin == lib_coins.Bitg
-    os.environ['NET'] = 'mainnet'
-    e = Env()
-    os.environ.pop('NET')
-    os.environ['COIN'] = ' Pivx '
-    os.environ['NET'] = 'mainnet'
-    e = Env()
-    assert e.coin == lib_coins.Pivx
-    os.environ['NET'] = 'testnet'
-    e = Env()
-    assert e.coin == lib_coins.PivxTestnet
-    os.environ.pop('NET')
-    os.environ['NET'] = 'mainnet'
-    os.environ['COIN'] = ' TokenPay '
-    e = Env()
-    assert e.coin == lib_coins.TokenPay
 
 
 def test_CACHE_MB():
@@ -159,7 +114,6 @@ def test_SERVICES():
         Service('ws', NetAddress('1.2.3.4', 567)),
         Service('rpc', NetAddress('::1', 700)),
     ]
-
 
 def test_SERVICES_default_rpc():
     # This has a blank entry between commas
@@ -181,7 +135,7 @@ def test_bad_SERVICES():
     setup_base_env()
     os.environ['SERVICES'] = 'tcp:foo.bar:1234'
     with pytest.raises(ServiceError) as err:
-        Env()
+         Env()
     assert 'invalid service string' in str(err.value)
     os.environ['SERVICES'] = 'xxx://foo.com:50001'
     with pytest.raises(ServiceError) as err:
@@ -200,7 +154,7 @@ def test_onion_SERVICES():
 def test_duplicate_SERVICES():
     setup_base_env()
     os.environ['SERVICES'] = 'tcp://foo.bar:1234,ws://foo.bar:1235'
-    Env()
+    e = Env()
     os.environ['SERVICES'] = 'tcp://foo.bar:1234,ws://foo.bar:1234'
     with pytest.raises(ServiceError) as err:
         Env()
@@ -277,13 +231,7 @@ def test_REORG_LIMIT():
 
 
 def test_COST_HARD_LIMIT():
-    assert_integer(
-        'COST_HARD_LIMIT',
-        'cost_hard_limit',
-        10000,
-        min_value=5000,
-        max_value=20000,
-    )
+    assert_integer('COST_HARD_LIMIT', 'cost_hard_limit', 10000)
 
 
 def test_COST_SOFT_LIMIT():
@@ -415,17 +363,3 @@ def test_ban_versions():
 def test_coin_class_provided():
     e = Env(lib_coins.BitcoinSV)
     assert e.coin == lib_coins.BitcoinSV
-
-
-def test_drop_unknown_clients():
-    e = Env()
-    assert e.drop_client_unknown is False
-    os.environ['DROP_CLIENT_UNKNOWN'] = ""
-    e = Env()
-    assert e.drop_client_unknown is False
-    os.environ['DROP_CLIENT_UNKNOWN'] = "1"
-    e = Env()
-    assert e.drop_client_unknown is True
-    os.environ['DROP_CLIENT_UNKNOWN'] = "whatever"
-    e = Env()
-    assert e.drop_client_unknown is True

@@ -13,7 +13,7 @@ from os import environ
 from electrumx.lib.util import class_logger
 
 
-class EnvBase:
+class EnvBase(object):
     '''Wraps environment configuration.'''
 
     class Error(Exception):
@@ -37,7 +37,7 @@ class EnvBase:
     def required(cls, envvar):
         value = environ.get(envvar)
         if value is None:
-            raise cls.Error(f'required envvar {envvar} not set')
+            raise cls.Error('required envvar {} not set'.format(envvar))
         return value
 
     @classmethod
@@ -48,8 +48,8 @@ class EnvBase:
         try:
             return int(value)
         except Exception:
-            raise cls.Error(f'cannot convert envvar {envvar} value {value} to '
-                            f'an integer')
+            raise cls.Error('cannot convert envvar {} value {} to an integer'
+                            .format(envvar, value)) from None
 
     @classmethod
     def custom(cls, envvar, default, parse):
@@ -59,15 +59,15 @@ class EnvBase:
         try:
             return parse(value)
         except Exception as e:
-            raise cls.Error(
-                f'cannot parse envvar {envvar} value {value}'
-            ) from e
+            raise cls.Error('cannot parse envvar {} value {}'
+                            .format(envvar, value)) from e
 
     @classmethod
     def obsolete(cls, envvars):
         bad = [envvar for envvar in envvars if environ.get(envvar)]
         if bad:
-            raise cls.Error(f'remove obsolete environment variables {bad}')
+            raise cls.Error('remove obsolete environment variables {}'
+                            .format(bad))
 
     def event_loop_policy(self):
         policy = self.default('EVENT_LOOP_POLICY', None)
@@ -76,4 +76,4 @@ class EnvBase:
         if policy == 'uvloop':
             import uvloop
             return uvloop.EventLoopPolicy()
-        raise self.Error(f'unknown event loop policy "{policy}"')
+        raise self.Error('unknown event loop policy "{}"'.format(policy))

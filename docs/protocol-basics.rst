@@ -164,6 +164,37 @@ inputs are confirmed.
 full string expressed as a hexadecimal string, or :const:`null` if the
 string is empty because there are no transactions.
 
+.. _asset_status:
+
+Asset Status
+------------
+
+To calculate the `status` of an asset:
+
+1. Convert the number of satoshis in circulation into a string (e.g. 100,000,000 -> "100000000")
+
+2. Convert the number of divisions into a string (e.g. 1 -> "1")
+
+3. Convert the reissuability of an asset into a string. The boolean
+types match as follows: true -> "True", false -> "False" (The default
+python implementation)
+
+4. Convert the boolean value of whether an asset has associated ipfs
+data into string form.
+
+5. Concatenate these strings (e.g. "1000000001FalseTrue")
+
+6. If an asset has an associated ipfs hash, append this as-is.
+(e.g. "1000000001FalseTrueQmeGgd16sWq6TNfXy8xzwQWRhv1vZUjP1LBxVnfaHaoV25")
+otherwise, do nothing.
+(e.g. "1000000001FalseFalse")
+
+7. Convert this string into a byte array of respective ascii values.
+
+8. The `status` of the asset is the :func:`sha256` hash of this byte array
+expressed as a hexadecimal string, or :const:`null` if the
+asset does not exist.
+
 
 Block Headers
 -------------
@@ -172,7 +203,7 @@ Originally Electrum clients would download all block headers and
 verify the chain of hashes and header difficulty in order to confirm
 the merkle roots with which to check transaction inclusion.
 
-With the BTC and BCH chains now past height 500,000, the headers form
+With the Bitcoin chain now past height 500,000, the headers form
 over 40MB of raw data which becomes 80MB if downloaded as text from
 Electrum servers.  The situation is worse for testnet and coins with
 more frequent blocks.  Downloading and verifying all this data on

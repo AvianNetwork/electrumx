@@ -1,8 +1,8 @@
 import os
+
 import pytest
 
 from electrumx.lib.merkle import Merkle, MerkleCache
-
 
 merkle = Merkle()
 hashes = [merkle.hash_func(bytes([x])) for x in range(8)]
@@ -144,7 +144,7 @@ def test_branch_and_root_from_level_bad():
         merkle.branch_and_root_from_level(hashes, [hashes[0]], 1, 0)
 
 
-class Source:
+class Source(object):
 
     def __init__(self, length):
         self._hashes = [os.urandom(32) for _ in range(length)]

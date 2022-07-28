@@ -26,36 +26,22 @@
 
 '''Miscellaneous utility classes and functions.'''
 
-
-from array import array
-import asyncio
+import array
 import inspect
-from ipaddress import ip_address
 import logging
 import sys
 from collections.abc import Container, Mapping
+from ipaddress import ip_address
 from struct import Struct
 
 import aiorpcx
-
-
-# Use system-compiled JSON lib if available, fallback to stdlib
-try:
-    import rapidjson as json
-except ImportError:
-    try:
-        import ujson as json
-    except ImportError:
-        import json
-
-json_deserialize = json.loads
-json_serialize = json.dumps
 
 # Logging utilities
 
 
 class ConnectionLogger(logging.LoggerAdapter):
     '''Prepends a connection identifier to a logging message.'''
+
     def process(self, msg, kwargs):
         conn_id = self.extra.get('conn_id', 'unknown')
         return f'[{conn_id}] {msg}', kwargs
@@ -63,6 +49,7 @@ class ConnectionLogger(logging.LoggerAdapter):
 
 class CompactFormatter(logging.Formatter):
     '''Strips the module from the logger name to leave the class only.'''
+
     def format(self, record):
         record.name = record.name.rpartition('.')[-1]
         return super().format(record)
@@ -85,12 +72,13 @@ def class_logger(path, classname):
 # Method decorator.  To be used for calculations that will always
 # deliver the same result.  The method cannot take any arguments
 # and should be accessed as an attribute.
-class cachedproperty:
+class cachedproperty(object):
+
     def __init__(self, f):
         self.f = f
 
-    def __get__(self, obj, type):
-        obj = obj or type
+    def __get__(self, obj, type_):
+        obj = obj or type_
         value = self.f(obj)
         setattr(obj, self.f.__name__, value)
         return value
@@ -108,7 +96,7 @@ def formatted_time(t, sep=' '):
             parts.append(fmt.format(val))
         t %= n
     if len(parts) < 3:
-        parts.append(f'{t:02d}s')
+        parts.append('{:02d}s'.format(t))
     return sep.join(parts)
 
 
@@ -135,7 +123,7 @@ def deep_getsizeof(obj):
         r = sys.getsizeof(o)
         ids.add(id(o))
 
-        if isinstance(o, (str, bytes, bytearray, array)):
+        if isinstance(o, (str, bytes, bytearray, array.array)):
             return r
 
         if isinstance(o, Mapping):
@@ -151,6 +139,7 @@ def deep_getsizeof(obj):
 
 def subclasses(base_class, strict=True):
     '''Return a list of subclasses of base_class in its module.'''
+
     def select(obj):
         return (inspect.isclass(obj) and issubclass(obj, base_class) and
                 (not strict or obj != base_class))
@@ -186,17 +175,18 @@ def increment_byte_string(bs):
     '''Return the lexicographically next byte string of the same length.
 
     Return None if there is none (when the input is all 0xff bytes).'''
-    try:
-        return (int.from_bytes(bs, 'big') + 1).to_bytes(len(bs), 'big')
-    except OverflowError:
-        return None
+    for n in range(1, len(bs) + 1):
+        if bs[-n] != 0xff:
+            return bs[:-n] + bytes([bs[-n] + 1]) + bytes(n - 1)
+    return None
 
 
-class LogicalFile:
+class LogicalFile(object):
     '''A logical binary file split across several separate files on disk.'''
 
     def __init__(self, prefix, digits, file_size):
-        self.filename_fmt = f'{prefix}{{:0{digits:d}d}}'
+        digit_fmt = '{' + ':0{:d}d'.format(digits) + '}'
+        self.filename_fmt = prefix + digit_fmt
         self.file_size = file_size
 
     def read(self, start, size=-1):
@@ -257,6 +247,7 @@ def open_truncate(filename):
 
 def address_string(address):
     '''Return an address as a correctly formatted string.'''
+    fmt = '{}:{:d}'
     host, port = address
     try:
         host = ip_address(host)
@@ -264,8 +255,8 @@ def address_string(address):
         pass
     else:
         if host.version == 6:
-            return f'[{host}]:{port:d}'
-    return f'{host}:{port:d}'
+            fmt = '[{}]:{:d}'
+    return fmt.format(host, port)
 
 
 def protocol_tuple(s):
@@ -275,14 +266,14 @@ def protocol_tuple(s):
     try:
         return tuple(int(part) for part in s.split('.'))
     except (TypeError, ValueError, AttributeError):
-        return (0, )
+        return (0,)
 
 
 def version_string(ptuple):
     '''Convert a version tuple such as (1, 2) to "1.2".
     There is always at least one dot, so (1, ) becomes "1.0".'''
     while len(ptuple) < 2:
-        ptuple += (0, )
+        ptuple += (0,)
     return '.'.join(str(p) for p in ptuple)
 
 
@@ -306,7 +297,7 @@ def protocol_version(client_req, min_tuple, max_tuple):
         client_max = protocol_tuple(client_max)
 
     result = min(client_max, max_tuple)
-    if result < max(client_min, min_tuple) or result == (0, ):
+    if result < max(client_min, min_tuple) or result == (0,):
         result = None
 
     return result, client_min
@@ -359,70 +350,117 @@ def pack_varbytes(data):
     return pack_varint(len(data)) + data
 
 
-class OldTaskGroup(aiorpcx.TaskGroup):
-    """Automatically raises exceptions on join; as in aiorpcx prior to version 0.20"""
-    async def join(self):
-        if self._wait is all:
-            exc = False
-            try:
-                async for task in self:
-                    if not task.cancelled():
-                        task.result()
-            except BaseException:  # including asyncio.CancelledError
-                exc = True
-                raise
-            finally:
-                if exc:
-                    await self.cancel_remaining()
-                await super().join()
+__b58chars = b'123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+assert len(__b58chars) == 58
+
+
+def base_encode(v: bytes, base: int) -> str:
+    """ encode v, which is a string of bytes, to base58."""
+    if base not in (58,):
+        raise ValueError('not supported base: {}'.format(base))
+    chars = __b58chars
+    long_value = 0
+    for (i, c) in enumerate(v[::-1]):
+        long_value += (256 ** i) * c
+    result = bytearray()
+    while long_value >= base:
+        div, mod = divmod(long_value, base)
+        result.append(chars[mod])
+        long_value = div
+    result.append(chars[long_value])
+    # Bitcoin does a little leading-zero-compression:
+    # leading 0-bytes in the input become leading-1s
+    nPad = 0
+    for c in v:
+        if c == 0x00:
+            nPad += 1
         else:
-            await super().join()
-            if self.completed:
-                self.completed.result()
+            break
+    result.extend([chars[0]] * nPad)
+    result.reverse()
+    return result.decode('ascii')
 
 
-# We monkey-patch aiorpcx.TaskGroup._add_task.
-# This is to plug a memory-leak, see https://github.com/kyuupichan/aiorpcX/issues/46 .
-# Note: this breaks the TaskGroup.results and TaskGroup.exceptions APIs
-#       but we are not using them anyway.
-# TODO: this monkey-patch can be removed once we require aiorpcx versions that
-#       have the upstream fix for #46.
-def _patched_TaskGroup_add_task(self: 'aiorpcx.TaskGroup', task):
-    self._orig_add_task(self, task)
-    if not hasattr(self, "_retain"):
-        self.tasks.clear()
+class DataParser:
 
-aiorpcx.TaskGroup._orig_add_task = staticmethod(aiorpcx.TaskGroup._add_task)
-aiorpcx.TaskGroup._add_task      = _patched_TaskGroup_add_task
+    class ParserException(Exception):
+        def __init__(self, *args):
+            if args:
+                parser = args[0]  # type: DataParser
+                text = args[1]  # type: str
+                self.message = text + '\n'
+                parse_str = parser.data.hex()
+                ptr = parser.cursor
+                self.message += parse_str[:ptr*2] + '|' + \
+                                parse_str[ptr*2:(ptr+1)*2] + '|' + \
+                                parse_str[(ptr+1)*2:]
+            else:
+                self.message = None
 
+        def __str__(self):
+            if self.message:
+                return 'ParserException, {}'.format(self.message)
+            else:
+                return 'ParserException raised'
 
-# We monkey-patch aiorpcx TimeoutAfter (used by timeout_after and ignore_after API),
-# to fix a timing issue present in asyncio as a whole re timing out tasks.
-# To see the issue we are trying to fix, consider example:
-#     async def outer_task():
-#         async with timeout_after(0.1):
-#             await inner_task()
-# When the 0.1 sec timeout expires, inner_task will get cancelled by timeout_after (=internal cancellation).
-# If around the same time (in terms of event loop iterations) another coroutine
-# cancels outer_task (=external cancellation), there will be a race.
-# Both cancellations work by propagating a CancelledError out to timeout_after, which then
-# needs to decide (in TimeoutAfter.__aexit__) whether it's due to an internal or external cancellation.
-# AFAICT asyncio provides no reliable way of distinguishing between the two.
-# This patch tries to always give priority to external cancellations.
-# see https://github.com/kyuupichan/aiorpcX/issues/44
-# see https://github.com/aio-libs/async-timeout/issues/229
-# see https://bugs.python.org/issue42130 and https://bugs.python.org/issue45098
-def _aiorpcx_monkeypatched_set_new_deadline(task, deadline):
-    def timeout_task():
-        task._orig_cancel()
-        task._timed_out = None if getattr(task, "_externally_cancelled", False) else deadline
-    def mycancel(*args, **kwargs):
-        task._orig_cancel(*args, **kwargs)
-        task._externally_cancelled = True
-        task._timed_out = None
-    if not hasattr(task, "_orig_cancel"):
-        task._orig_cancel = task.cancel
-        task.cancel = mycancel
-    task._deadline_handle = task._loop.call_at(deadline, timeout_task)
+    def __init__(self, data: bytes):
+        self.data = bytes(data) if data else data
+        self.cursor = 0
+        self.length = len(data) if data else 0
 
-aiorpcx.curio._set_new_deadline = _aiorpcx_monkeypatched_set_new_deadline
+    def _assert_space(self, length: int):
+        if self.cursor + length > self.length:
+            raise self.ParserException(self, f'Out of bounds: trying to read {length} byte(s) {self.cursor} {self.length} {len(self.data)}')
+
+    def read_byte(self):
+        self._assert_space(1)
+        data = self.data[self.cursor]
+        self.cursor += 1
+        return bytes([data])
+
+    def read_int(self):
+        return self.read_byte()[0]
+
+    def read_boolean(self):
+        data = self.read_int()
+        if data not in (0, 1):
+            raise self.ParserException(self, 'Not a boolean')
+        return True if data != 0 else False
+
+    def read_bytes(self, length: int):
+        self._assert_space(length)
+        data = self.data[self.cursor:self.cursor + length]
+        self.cursor += length
+        return data
+
+    def read_var_bytes(self):
+        length = self.read_byte()[0]
+        return self.read_bytes(length)
+
+    def read_var_bytes_tuple(self):
+        length = self.read_byte()[0]
+        return length, self.read_bytes(length)
+
+    def read_var_bytes_tuple_bytes(self):
+        length = self.read_byte()[0]
+        return bytes([length]), self.read_bytes(length)
+
+    def read_bytes_as_ascii(self, length: int):
+        return self.read_bytes(length).decode('ascii')
+
+    def read_var_bytes_as_ascii(self):
+        return self.read_var_bytes().decode('ascii')
+
+    def read_var_bytes_as_ascii_tuple(self):
+        length, data = self.read_var_bytes_tuple()
+        return length, data.decode('ascii')
+
+    def read_var_bytes_as_ascii_tuple_bytes(self):
+        length, data = self.read_var_bytes_tuple_bytes()
+        return length, data.decode('ascii')
+
+    def is_finished(self):
+        if self.data is None:
+            return True
+        else:
+            return self.cursor >= self.length - 1

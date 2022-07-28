@@ -1,35 +1,29 @@
-import aiohttp
 import asyncio
 import json
 import logging
 
+import aiohttp
 import pytest
+from aiorpcx import (
+    JSONRPCv1, JSONRPCLoose, RPCError, ignore_after,
+    Request, )
 
-from aiorpcx import JSONRPCv1, JSONRPCLoose, RPCError, ignore_after, Request
-from electrumx.lib.coins import BitcoinCash, CoinError, Bitzeny, Dash
-from electrumx.server.daemon import Daemon, FakeEstimateFeeDaemon
+from electrumx.lib.coins import Bitcoin, CoinError
+from electrumx.server.daemon import Daemon
 
-
-coin = BitcoinCash
+coin = Bitcoin
 
 # These should be full, canonical URLs
 urls = ['http://rpc_user:rpc_pass@127.0.0.1:8332/',
         'http://rpc_user:rpc_pass@192.168.0.1:8332/']
 
 
-@pytest.fixture(params=[BitcoinCash, Bitzeny])
-def daemon(request):
-    coin = request.param
-    return coin.DAEMON(coin, ','.join(urls))
+@pytest.fixture
+def daemon():
+    return Daemon(Bitcoin, ','.join(urls))
 
 
-@pytest.fixture(params=[Dash])
-def dash_daemon(request):
-    coin = request.param
-    return coin.DAEMON(coin, ','.join(urls))
-
-
-class ResponseBase:
+class ResponseBase(object):
 
     def __init__(self, headers, status):
         self.headers = headers
@@ -49,14 +43,14 @@ class JSONResponse(ResponseBase):
         self.result = result
         self.msg_id = msg_id
 
-    async def json(self, loads=json.loads):
+    async def json(self):
         if isinstance(self.msg_id, int):
             message = JSONRPCv1.response_message(self.result, self.msg_id)
         else:
             parts = [JSONRPCv1.response_message(item, msg_id)
                      for item, msg_id in zip(self.result, self.msg_id)]
             message = JSONRPCv1.batch_message_from_parts(parts)
-        return loads(message.decode())
+        return json.loads(message.decode())
 
 
 class HTMLResponse(ResponseBase):
@@ -239,61 +233,10 @@ async def test_broadcast_transaction(daemon):
 
 
 @pytest.mark.asyncio
-async def test_relayfee(daemon):
-    if isinstance(daemon, FakeEstimateFeeDaemon):
-        sats = daemon.coin.ESTIMATE_FEE
-    else:
-        sats = 2
-    response = {"relayfee": sats, "other:": "cruft"}
-    daemon.session = ClientSessionGood(('getnetworkinfo', [], response))
-    assert await daemon.relayfee() == sats
-
-
-@pytest.mark.asyncio
 async def test_mempool_hashes(daemon):
     hashes = ['hex_hash1', 'hex_hash2']
     daemon.session = ClientSessionGood(('getrawmempool', [], hashes))
     assert await daemon.mempool_hashes() == hashes
-
-
-@pytest.mark.asyncio
-async def test_deserialised_block(daemon):
-    block_hash = 'block_hash'
-    result = {'some': 'mess'}
-    daemon.session = ClientSessionGood(('getblock', [block_hash, True], result))
-    assert await daemon.deserialised_block(block_hash) == result
-
-
-@pytest.mark.asyncio
-async def test_estimatefee(daemon):
-    method_not_found = RPCError(JSONRPCv1.METHOD_NOT_FOUND, 'nope')
-    if isinstance(daemon, FakeEstimateFeeDaemon):
-        result = daemon.coin.ESTIMATE_FEE
-    else:
-        result = -1
-    daemon.session = ClientSessionGood(
-            ('estimatesmartfee', [], method_not_found),
-            ('estimatefee', [2], result)
-    )
-    assert await daemon.estimatefee(2) == result
-
-
-@pytest.mark.asyncio
-async def test_estimatefee_smart(daemon):
-    bad_args = RPCError(JSONRPCv1.INVALID_ARGS, 'bad args')
-    if isinstance(daemon, FakeEstimateFeeDaemon):
-        return
-    rate = 0.0002
-    result = {'feerate': rate}
-    daemon.session = ClientSessionGood(
-        ('estimatesmartfee', [], bad_args),
-        ('estimatesmartfee', [2], result)
-    )
-    assert await daemon.estimatefee(2) == rate
-
-    # Test the rpc_available_cache is used
-    daemon.session = ClientSessionGood(('estimatesmartfee', [2], result))
-    assert await daemon.estimatefee(2) == rate
 
 
 @pytest.mark.asyncio
@@ -309,13 +252,6 @@ async def test_getrawtransaction(daemon):
     daemon.session = ClientSessionGood(('getrawtransaction', [hex_hash, 1], verbose))
     assert await daemon.getrawtransaction(
         hex_hash, True) == verbose
-
-
-@pytest.mark.asyncio
-async def test_protx(dash_daemon):
-    protx_hash = 'deadbeaf'
-    dash_daemon.session = ClientSessionGood(('protx', ['info', protx_hash], {}))
-    assert await dash_daemon.protx(['info', protx_hash]) == {}
 
 
 # Batch tests
@@ -337,18 +273,6 @@ async def test_block_hex_hashes(daemon):
                                         [[n] for n in range(first, first + count)],
                                         hashes))
     assert await daemon.block_hex_hashes(first, count) == hashes
-
-
-@pytest.mark.asyncio
-async def test_raw_blocks(daemon):
-    count = 3
-    hex_hashes = [f'hex_hash{n}' for n in range(count)]
-    args_list = [[hex_hash, False] for hex_hash in hex_hashes]
-    iterable = (hex_hash for hex_hash in hex_hashes)
-    blocks = ["00", "019a", "02fe"]
-    blocks_raw = [bytes.fromhex(block) for block in blocks]
-    daemon.session = ClientSessionGood(('getblock', args_list, blocks))
-    assert await daemon.raw_blocks(iterable) == blocks_raw
 
 
 @pytest.mark.asyncio

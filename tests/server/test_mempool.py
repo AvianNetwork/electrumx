@@ -1,4 +1,3 @@
-import dataclasses
 import datetime
 import logging
 import os
@@ -7,19 +6,16 @@ from functools import partial
 from random import randrange, choice, seed
 
 import pytest
-from aiorpcx import Event, sleep, ignore_after
+from aiorpcx import Event, TaskGroup, sleep, ignore_after
 
-from electrumx.server.mempool import MemPool, MemPoolAPI
-from electrumx.lib.coins import BitcoinCash
-from electrumx.lib.hash import HASHX_LEN, hex_str_to_hash, hash_to_hex_str
+from electrumx.lib.coins import Bitcoin
+from electrumx.lib.hash import HASHX_LEN, hex_str_to_hash, hash_to_hex_str, double_sha256
 from electrumx.lib.tx import Tx, TxInput, TxOutput
-from electrumx.lib.util import OldTaskGroup
+from electrumx.server.mempool import MemPool, MemPoolAPI
 
-
-coin = BitcoinCash
-tx_hash_fn = coin.DESERIALIZER.TX_HASH_FN
+coin = Bitcoin
 # Change seed daily
-seed(datetime.date.today().toordinal)
+seed(datetime.date.today().toordinal())
 
 
 def random_tx(hash160s, utxos):
@@ -53,7 +49,7 @@ def random_tx(hash160s, utxos):
 
     tx = Tx(2, inputs, outputs, 0)
     tx_bytes = tx.serialize()
-    tx_hash = tx_hash_fn(tx_bytes)
+    tx_hash = double_sha256(tx_bytes)
     for n, output in enumerate(tx.outputs):
         utxos[(tx_hash, n)] = (coin.hashX_from_script(output.pk_script),
                                output.value)
@@ -234,11 +230,11 @@ class API(MemPoolAPI):
         await sleep(0)
         return [self.db_utxos.get(prevout) for prevout in prevouts]
 
-    async def on_mempool(self, touched, height):
+    async def on_mempool(self, touched, height, assets):
         '''Called each time the mempool is synchronized.  touched is a set of
         hashXs touched since the previous call.  height is the
         daemon's height at the time the mempool was obtained.'''
-        self.on_mempool_calls.append((touched, height))
+        self.on_mempool_calls.append((touched, height, assets))
         await sleep(0)
 
 
@@ -268,13 +264,12 @@ async def test_keep_synchronized(caplog):
     mempool = MemPool(coin, api)
     event = Event()
     with caplog.at_level(logging.INFO):
-        async with OldTaskGroup() as group:
+        async with TaskGroup() as group:
             await group.spawn(mempool.keep_synchronized, event)
             await event.wait()
             await group.cancel_remaining()
 
     assert in_caplog(caplog, 'beginning processing of daemon mempool')
-    assert in_caplog(caplog, 'compact fee histogram')
     assert in_caplog(caplog, 'synced in ')
     assert in_caplog(caplog, '0 txs')
     assert in_caplog(caplog, 'touching 0 addresses')
@@ -287,7 +282,7 @@ async def test_balance_delta():
     api.initialize()
     mempool = MemPool(coin, api)
     event = Event()
-    async with OldTaskGroup() as group:
+    async with TaskGroup() as group:
         await group.spawn(mempool.keep_synchronized, event)
         await event.wait()
         await group.cancel_remaining()
@@ -305,66 +300,12 @@ async def test_balance_delta():
 
 
 @pytest.mark.asyncio
-async def test_compact_fee_histogram():
-    api = API()
-    api.initialize()
-    mempool = MemPool(coin, api)
-    event = Event()
-    async with OldTaskGroup() as group:
-        await group.spawn(mempool.keep_synchronized, event)
-        await event.wait()
-        await group.cancel_remaining()
-
-    histogram = await mempool.compact_fee_histogram()
-    assert histogram == []
-    bin_size = 1000
-    mempool._update_histogram(bin_size)
-    histogram = await mempool.compact_fee_histogram()
-    assert len(histogram) > 0
-    rates, sizes = zip(*histogram)
-    assert all(rates[n] < rates[n - 1] for n in range(1, len(rates)))
-
-
-def test_compress_histogram():
-    histogram = {
-        10: 100_000,
-        11: 1_000,
-        12: 10_000_000,
-        13: 1_000,
-        14: 1_000,
-        15: 1_000,
-        16: 1_000,
-        17: 1_000,
-        18: 900_000,
-        19: 1_000,
-        20: 1_000,
-        21: 75_000,
-        22: 1_000,
-    }
-    compact = MemPool._compress_histogram(histogram, bin_size=100_000)
-    assert compact == [(19, 78000), (18, 900000), (13, 5000), (12, 10000000)]
-    compact = MemPool._compress_histogram(histogram, bin_size=30_000)
-    assert compact == [(22, 1000), (21, 75000), (19, 2000), (18, 900000), (13, 5000), (12, 10000000), (10, 101000)]
-
-    histogram = {
-        1.0: 10_000_000,
-        1.1: 30_000,
-        1.2: 40_000,
-        10: 500_000,
-        10.1: 1_000,
-        11: 50_000,
-    }
-    compact = MemPool._compress_histogram(histogram, bin_size=100_000)
-    assert compact == [(10.1, 51000), (10, 500000), (1.1, 70000), (1.0, 10000000)]
-
-
-@pytest.mark.asyncio
 async def test_potential_spends():
     api = API()
     api.initialize()
     mempool = MemPool(coin, api)
     event = Event()
-    async with OldTaskGroup() as group:
+    async with TaskGroup() as group:
         await group.spawn(mempool.keep_synchronized, event)
         await event.wait()
         await group.cancel_remaining()
@@ -399,7 +340,7 @@ async def test_transaction_summaries(caplog):
     mempool = MemPool(coin, api)
     event = Event()
     with caplog.at_level(logging.INFO):
-        async with OldTaskGroup() as group:
+        async with TaskGroup() as group:
             await group.spawn(mempool.keep_synchronized, event)
             await event.wait()
             await group.cancel_remaining()
@@ -419,7 +360,7 @@ async def test_unordered_UTXOs():
     api.initialize()
     mempool = MemPool(coin, api)
     event = Event()
-    async with OldTaskGroup() as group:
+    async with TaskGroup() as group:
         await group.spawn(mempool.keep_synchronized, event)
         await event.wait()
         await group.cancel_remaining()
@@ -434,10 +375,7 @@ async def test_unordered_UTXOs():
     for hashX in api.hashXs:
         mempool_result = await mempool.unordered_UTXOs(hashX)
         our_result = utxos.get(hashX, [])
-        assert set(our_result) == {
-            dataclasses.astuple(mr)
-            for mr in mempool_result
-        }
+        assert set(our_result) == set(mempool_result)
 
 
 @pytest.mark.asyncio
@@ -446,7 +384,7 @@ async def test_mempool_removals():
     api.initialize()
     mempool = MemPool(coin, api, refresh_secs=0.01)
     event = Event()
-    async with OldTaskGroup() as group:
+    async with TaskGroup() as group:
         await group.spawn(mempool.keep_synchronized, event)
         await event.wait()
         # Remove half the TXs from the mempool
@@ -476,7 +414,7 @@ async def test_daemon_drops_txs():
     api.initialize()
     mempool = MemPool(coin, api, refresh_secs=0.01)
     event = Event()
-    async with OldTaskGroup() as group:
+    async with TaskGroup() as group:
         await group.spawn(mempool.keep_synchronized, event)
         await event.wait()
         await _test_summaries(mempool, api)
@@ -504,7 +442,7 @@ async def test_notifications(caplog):
 
     caplog.set_level(logging.DEBUG)
 
-    async with OldTaskGroup() as group:
+    async with TaskGroup() as group:
         # First batch enters the mempool
         api.raw_txs = {hash: raw_txs[hash] for hash in first_hashes}
         api.txs = {hash: txs[hash] for hash in first_hashes}
@@ -564,7 +502,7 @@ async def test_dropped_txs(caplog):
             del api.txs[prev_hash]
 
     with caplog.at_level(logging.INFO):
-        async with OldTaskGroup() as group:
+        async with TaskGroup() as group:
             await group.spawn(mempool.keep_synchronized, event)
             await event.wait()
             await group.cancel_remaining()

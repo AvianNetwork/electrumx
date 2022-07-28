@@ -1,5 +1,6 @@
 **/__pycache__/
 .cache/
+.coverage
 .pytest_cache/
 */*~
 *.#*
@@ -8,8 +9,11 @@
 docs/_build
 /build
 /dist
+/env
 /electrumx.egg-info
-/e_x.egg-info
 .vscode/
 .mypy_cache/
 .idea/
+test_get_ops.py
+test_address.py
+test_advance.py

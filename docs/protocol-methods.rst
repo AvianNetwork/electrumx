@@ -2,6 +2,512 @@
  Protocol Methods
 ==================
 
+blockchain.asset.check_tag
+========================================
+
+Returns a dictionary with information regarding a tagged address's h160.
+
+**Signature**
+
+    .. function:: blockchain.asset.check_tag(h160, asset)
+    .. versionadded:: 1.10
+
+    *h160*
+
+      The h160 of a public key as a hex string
+
+    *asset*
+
+      A restricted or qualifing asset as an ascii-compliant string
+
+**Result**
+
+    A dictionary containing a flag. If there is no on-chain data, this defaults to :const:`false`. Otherwise chain location information is included.
+
+    If *asset* is a qualifing asset, a :const:`true` flag denotes that this public key is tagged by qualifier.
+
+    If *asset* is a restricted asset, a :const:`true` flag denotes that this public key is frozen from spending the restricted asset.
+
+**Example Results**
+
+    {
+      "flag": true,
+      "height": 1047144,
+      "tx_hash": "7e176ed933db1d57b81d939b5ee328bbd483d62f896c2bf0f0c709c44d7790b1",
+      "tx_pos": 1
+    }
+
+blockchain.asset.all_tags
+========================================
+
+Returns a dictionary with information regarding all of the tags associated with a h160.
+
+**Signature**
+
+    .. function:: blockchain.asset.all_tags(h160)
+    .. versionadded:: 1.10
+
+    *h160*
+
+      The h160 of a public key as a hex string
+
+**Result**
+
+    A dictionary of tags and chain location information.
+
+**Example Results**
+
+    {
+      "#QUALTEST": {
+          "flag": true,
+          "height": 1047144,
+          "tx_hash": "7e176ed933db1d57b81d939b5ee328bbd483d62f896c2bf0f0c709c44d7790b1",
+          "tx_pos": 1
+      },
+      "$TESTASSET1": {
+          "flag": true,
+          "height": 1047145,
+          "tx_hash": "a93d7bd4cbc83ba334b48658a9b94a4718c497c0d7c39cba8281a07249fc1431",
+          "tx_pos": 1
+      }
+    }
+
+blockchain.asset.is_frozen
+========================================
+
+Returns a dictionary with information regarding whether a restricted asset is globally frozen.
+
+**Signature**
+
+    .. function:: blockchain.asset.is_frozen(asset)
+    .. versionadded:: 1.10
+
+    *asset*
+
+      A restricted asset as an ascii-compliant string
+
+**Result**
+
+    A dictionary containing a *frozen* booelean. If there is no on-chain data, this defaults to :const:`false`. Otherwise chain location information is included.
+
+**Example Results**
+
+    {
+      "frozen": false,
+      "height": 1047127,
+      "tx_hash": "41ac251f352ba497c8b3af9e28aa0db889da287423a01e611c6169cc43b8596b",
+      "tx_pos": 1
+    }
+
+blockchain.asset.validator_string
+========================================
+
+Returns a dictionary with information about a restricted asset's qualifications
+
+**Signature**
+
+    .. function:: blockchain.asset.validator_string(asset)
+    .. versionadded:: 1.10
+
+    *asset*
+
+      A restricted asset as an ascii-compliant string
+
+**Result**
+
+    A dictionary containing a qualifier boolean logic string to show what qualifier tags an address needs to recieve this asset.
+
+**Example Results**
+
+    {
+      "height": 1047149,
+      "qualifying_tx_pos": 1,
+      "restricted_tx_pos": 4,
+      "string": "QUALTEST|QUALTEST",
+      "tx_hash": "db27e9b9471f5695685fb018889ac4601720655f68194bfbbc5a835fb35b4369"
+    }
+
+blockchain.asset.restricted_associations
+========================================
+
+Returns a list of restricted assets of who's qualifing string contains the qualifier asset in some form
+
+**Signature**
+
+    .. function:: blockchain.asset.restricted_associations(asset)
+    .. versionadded:: 1.10
+
+    *asset*
+
+      A qualifying asset as an ascii-compliant string
+
+**Result**
+
+    A dictionary containing restricted assets and on-chain location data
+
+**Example Results**
+
+    {
+      "$SWAP": {
+          "associated": true,
+          "height": 756895,
+          "qualifying_tx_pos": 0,
+          "restricted_tx_pos": 4,
+          "tx_hash": "a2b634e160974348647484302501a64bc80a841d4a9ea833498a47e72e987628"
+      }
+    }
+
+blockchain.asset.list_addresses_by_asset
+========================================
+
+An **optional** method. Requires --assetindex=1 in ravend. Returns an error if unavaliable. Returns a dictionary with information about what address(es) hold an asset.
+
+**Signature**
+
+  .. function:: blockchain.asset.list_addresses_by_asset(asset, onlytotal=false, count=1000, start=0)
+  .. versionadded:: 1.9
+
+  *asset*
+
+    An ascii-compliant asset name
+
+  *onlytotal*
+
+    If :const:`True`, only the number of addresses holding this asset is returned.
+    Otherwise, addresses with values are returned.
+
+  *count*
+
+    Only matters if :const:`onlytotal` is :const:`True`.
+    Truncates the results to this number. Maximum of 1000 and must be at least 1.
+
+  *start*
+
+    Only matters if :const:`onlytotal` is :const:`True`.
+    Result skips over this many addresses and returns the next :const:`count`. Must be
+    0 or greater.
+
+**Result**
+
+    If *onlytotal* is :const:`false`:
+
+       A dictionary mapping addresses to their asset count
+
+    If *onlytotal* is :const:`true`:
+
+       A dictionary denoting how many addresses total hold this asset
+
+**Example Results**
+
+When *onlytotal* is :const:`false`::
+
+ {
+    "R9HC7XkCwnQA5dQZ18BntXgUe9ESuALU3J": 2,
+    "R9HCY7PtFZb6RkvdnpDjDhguRTWMTEYW6q": 1,
+    "R9HCbhPSLkPtnESx2FSSUEdAxK6CfVQKJ3": 1,
+    "R9HCeygiyUGSuB2njMEy3P5NDNdL2zuCDv": 1,
+    "R9HCgctF8nRUfR7Liy2WJw6nN6naeihYDa": 1,
+    "R9HCmJtzYdCJ4Zw2ziaSgwWzwQPqsopRWA": 1,
+    "R9HCsMj7kCMatpR6sWo9dwNUA3caLf4G6F": 1,
+    "R9HD36FUXbF1Eq6ZU4ukQAHKXrUcB5zz6n": 1,
+    "R9HD7HTST7SshLdbHdGpFXNpXWab1iRQEF": 1,
+    "R9HDH3ZDuLRVF8ivzUwnojZa7thtRXQooM": 1
+ }
+
+When *onlytotal* is :const:`true`::
+
+ {
+    "unique_addresses": 91570
+ }
+
+blockchain.asset.get_assets_with_prefix
+=======================================
+
+Returns a list of assets that begin with the prefix. Comparable to the regex
+\^{{prefix}}.*\.
+
+**Signature**
+
+  .. function:: blockchain.asset.get_assets_with_prefix(prefix)
+  .. versionadded:: 1.9
+
+  *prefix*
+
+    What the asset should begin with.
+
+**Result**
+
+  A list of assets that begin with the prefix.
+
+**Result Example**
+
+::
+
+  [AN_ASSET, ANT, AN_ASSET/SUB_ASSET, ANT#UNIQUE]
+
+blockchain.asset.broadcasts
+=======================================
+
+Return the messages broadcast from a (message channel) asset broadcast.
+
+**Signature**
+
+  .. function:: blockchain.asset.broadcasts(message_channel)
+  .. versionadded:: 1.9
+
+  *message_channel*
+
+    The message channel asset.
+
+**Result**
+
+  A dictionary containing a history of all broadcasts made from this message
+  channel. The keys in this dictionary are txids. The values are the broadcast
+  data, the transaction height, and position in the transactions of the broadcast.
+
+**Result Example**
+
+::
+
+  {
+    "d5948b8df75c2590bcf4cc2c73abccdfd13ad5afbe37f4445abcc0a048392782": {
+      "data": "Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu",
+      "height": 1830170,
+      "tx_pos": 1
+    }
+  }
+
+blockchain.scripthash.get_asset_balance
+=======================================
+
+Return the confirmed and unconfirmed asset balances of a :ref:`script hash
+<script hashes>`.
+
+**Signature**
+
+  .. function:: blockchain.scripthash.get_asset_balance(scripthash)
+  .. versionadded:: 1.8
+
+  *scripthash*
+
+    The script hash as a hexadecimal string.
+
+**Result**
+
+  A dictionary with keys `confirmed` and `unconfirmed`.  The value of
+  each is a dictionary with the key being the asset name and the value
+  being the appropriate balance in minimum coin units (satoshis).
+
+**Result Example**
+
+::
+
+  {
+    "confirmed": {
+      "asset1": 100000000,
+      "asset2": 200000000
+    },
+    "unconfirmed": {
+      "asset3": 300000000
+    }
+  }
+
+blockchain.scripthash.listassets
+=================================
+
+Return an ordered list of asset UTXOs sent to a script hash.
+
+**Signature**
+
+  .. function:: blockchain.scripthash.listassets(scripthash)
+  .. versionadded:: 1.8
+
+  *scripthash*
+
+    The script hash as a hexadecimal string.
+
+**Result**
+
+  A list of unspent asset outputs in blockchain order.  This function takes
+  the mempool into account.  Mempool transactions paying to the
+  address are included at the end of the list in an undefined order.
+  Any output that is spent in the mempool does not appear.  Each
+  output is a dictionary with the following keys:
+
+  * *height*
+
+    The integer height of the block the transaction was confirmed in.
+    ``0`` if the transaction is in the mempool.
+
+  * *tx_pos*
+
+    The zero-based index of the output in the transaction's list of
+    outputs.
+
+  * *tx_hash*
+
+    The output's transaction hash as a hexadecimal string.
+
+  * *name*
+
+    The asset's name
+
+  * *value*
+
+    The output's value in minimum coin units (satoshis).
+
+**Result Example**
+
+::
+
+  [
+    {
+      "tx_pos": 0,
+      "value": 45318048,
+      "tx_hash": "9f2c45a12db0144909b5db269415f7319179105982ac70ed80d76ea79d923ebf",
+      "name": "asset1",
+      "height": 437146
+    },
+    {
+      "tx_pos": 0,
+      "value": 919195,
+      "tx_hash": "3d2290c93436a3e964cfc2f0950174d8847b1fbe3946432c4784e168da0f019f",
+      "name": "asset2",
+      "height": 441696
+    }
+  ]
+
+blockchain.asset.get_meta
+=================================
+
+Return metadata associated with a certain asset.
+
+**Signature**
+
+  .. function:: blockchain.asset.get_meta(asset)
+  .. versionchanged:: 1.10
+  .. versionadded:: 1.8
+
+  *asset*
+
+    The name of the asset as an ascii compliant string.
+
+**Result**
+
+  Each result is a dictionary with the following keys:
+
+  * *sats_in_circulation*
+
+    A number from 1-21,000,000,000*100,000,000.
+    The number of this asset currently in circulation. (The total number of this asset created.)
+
+  * *divisions*
+
+    A number from 0-8.
+    The number of sub-divisions this asset can be split into.
+    0 means whole numbers, 1 means tenths, 2 means hundredths, etc.
+
+  * *reissuable*
+
+    A boolean.
+    Whether the owner of this asset's ownership asset can change its
+    metadata.
+
+  * *has_ipfs*
+
+    A boolean.
+    Whether this asset has an associated IPFS hash.
+
+  * *ipfs*
+
+    Only if *has_ipfs* is *true*.
+    The base58 encoded IPFS hash associated with this asset.
+
+  * *source*
+
+    The source of this metadata on-chain.
+
+  * *source_divisions*
+
+    The previous source of this metadata on-chain that has divisions. (Only if this asset has been reissued with an divisions value of 0xFF.)
+
+  * *source_ipfs*
+
+    The previous source of this metadata on-chain that has the ipfs. (Only if this asset has been reissued with no asset change.)
+
+**Result Example**
+
+::
+
+  {
+    "sats_in_circulation": 100000000,
+    "divisions": 0,
+    "has_ipfs": 1,
+    "ipfs": "QmeGgd16sWq6TNfXy8xzwQWRhv1vZUjP1LBxVnfaHaoV25",
+    "reissuable": 0,
+    "source":
+        {
+        "tx_hash": "9f2c45a12db0144909b5db269415f7319179105982ac70ed80d76ea79d923ebf",
+        "tx_pos": 0,
+        "height": 203500
+        },
+    "source_prev":
+        {
+        "tx_hash": "2c9f45a12db0144909b5db269415f7319179105982ac70ed80d76ea79d92bf3e",
+        "tx_pos": 1,
+        "height": 104501
+        }
+  }
+
+.. _subscribed:
+
+blockchain.asset.subscribe
+===============================
+
+Subscribe to an asset.
+
+**Signature**
+
+  .. function:: blockchain.asset.subscribe(asset)
+  .. versionadded:: 1.8
+
+  *asset*
+
+    The name of the asset as an ascii compliant string.
+
+**Result**
+
+  The :ref:`status <asset_status>` of the asset.
+
+**Notifications**
+
+  The client will receive a notification when the :ref:`status <asset_status>` of the asset
+  changes.  Its signature is
+
+    .. function:: blockchain.asset.subscribe(asset, status)
+       :noindex:
+
+blockchain.asset.unsubscribe
+=================================
+
+Unsubscribe from an asset, preventing future notifications if its :ref:`status
+<status>` changes.
+
+**Signature**
+
+  .. function:: blockchain.asset.subscribe(asset)
+  .. versionadded:: 1.8
+
+  *asset*
+
+    The name of the asset as an ascii compliant string.
+
+**Result**
+
+  Returns :const:`True` if the asset was subscribed to, otherwise :const:`False`.
+  Note that :const:`False` might be returned even for something subscribed to earlier,
+  because the server can drop subscriptions in rare circumstances.
+
 blockchain.block.header
 =======================
 
@@ -121,8 +627,7 @@ Return a concatenated chunk of block headers from the main chain.
   * *max*
 
     The maximum number of headers the server will return in a single
-    request.  (Recommended to be at least one difficulty retarget period,
-    i.e. 2016)
+    request.
 
   The dictionary additionally has the following keys if *count* and
   *cp_height* are not zero.  This provides a proof that all the given
@@ -177,7 +682,7 @@ be confirmed within a certain number of blocks.
 
 ::
 
-  0.00101079
+  0.00001
 
 
 blockchain.headers.subscribe
@@ -246,18 +751,13 @@ be accepted to the daemon's memory pool.
 
 **Result**
 
-  The fee in whole coin units (BTC, not satoshis for Bitcoin) as a
-  floating point number.
+  The fee in whole coin units as a floating point number.
 
 **Example Results**
 
 ::
 
-   1e-05
-
-::
-
-   0.0
+   0.000001
 
 blockchain.scripthash.get_balance
 =================================
@@ -678,6 +1178,90 @@ and height.
     "pos": 710
   }
 
+
+blockchain.transaction.get_tsc_merkle
+=====================================
+
+Return the TSC Bitcoin Association merkle proof in standardised format for a confirmed
+transaction given its hash and height. Additional options include: txid_or_tx and target_type.
+
+See: https://tsc.bitcoinassociation.net/standards/merkle-proof-standardised-format/
+
+**Signature**
+
+  .. function:: blockchain.transaction.get_tsc_merkle(tx_hash, height, txid_or_tx="txid", target_type="block_hash")
+
+  *tx_hash*
+
+    The transaction hash as a hexadecimal string.
+
+  *height*
+
+    The height at which it was confirmed, an integer.
+
+  *txid_or_tx*
+
+    Takes two possible values: "txid" or "tx".
+    Selects whether to return the transaction hash or the full transaction as a hexadecimal string.
+
+  *target_type*
+
+    Takes three possible values: "block_hash", "block_header", "merkle_root"
+    The selected target is returned as a hexidecimal string in the response.
+
+
+**Result**
+
+  A dictionary with the following keys:
+
+  * *composite*
+
+    Included for completeness. Whether or not this is a composite merkle proof (for two or more
+    transactions). ElectrumX does not support composite proofs at this time (always False).
+
+  * *index*
+
+    The 0-based position index of the transaction in the block.
+
+  * *nodes*
+
+    The list of hash pairs making up the merkle branch. "Duplicate" hashes (see TSC merkle proof
+    format spec.) are replaced with asterixes as they can be derived by the client.
+
+  * *proofType*
+
+    Included for completeness. Specifies the proof type as either 'branch' or 'tree' type.
+    ElectrumX only supports 'branch' proof types.
+
+  * *target*
+
+    Either the block_hash, block_header or merkle_root as a hexidecimal string.
+
+  * *targetType*
+
+    Takes three possible values: "block_hash", "block_header", "merkle_root"
+
+  * *txOrId*
+
+    Either a 32 byte tx hash or a full transaction as a hexidecimal string.
+
+**Result Example**
+
+::
+
+    {
+        'composite': False,
+        'index': 4,
+        'nodes': [
+            '*',
+            '*',
+            '80c0100bc080eb0d2e205dc687056dc13c2079d0959c70cad8856fea88c74aba'],
+        'proofType': 'branch',
+        'target': '29442cb6e2ee547fcf5200dfb1b4018f4fc5ce5a220bb5ec3729a686885692fc',
+        'targetType': 'block_hash',
+        'txOrId': 'ed5a81e439e1cd9139ddb81da80bfa7cfc31e323aea544ca92a9ee1d84b9fb2f'
+    }
+
 blockchain.transaction.id_from_pos
 ==================================
 
@@ -752,6 +1336,7 @@ pool, weighted by transaction size.
 
   .. function:: mempool.get_fee_histogram()
   .. versionadded:: 1.2
+  .. deprecated:: 1.4.2
 
 **Result**
 
@@ -1015,236 +1600,3 @@ Only the first :func:`server.version` message is accepted.
 
   ["ElectrumX 1.2.1", "1.2"]
 
-
-Masternode methods (Dash and compatible coins)
-==============================================
-
-
-masternode.announce.broadcast
-=============================
-
-Pass through the masternode announce message to be broadcast by the daemon.
-
-Whenever a masternode comes online or a client is syncing, they will
-send this message which describes the masternode entry and how to
-validate messages from it.
-
-**Signature**
-
-  .. function:: masternode.announce.broadcast(signmnb)
-
-  * *signmnb*
-
-    Signed masternode broadcast message in hexadecimal format.
-
-**Result**
-
-  :const:`true` if the message was broadcasted successfully otherwise
-  :const:`false`.
-
-**Example**::
-
-  masternode.announce.broadcast("012b825a65a24e2eb8edadbe27c4716dab993bf1046a66da77268ec87dbdd9dfc80100000000ffffffff00000000000000000000ffff22db1fec42d82103bfc9e296bcf4d63eced97b204df8f7b2b90131d452abd2b50909fa2ce6f66d752103bfc9e296bcf4d63eced97b204df8f7b2b90131d452abd2b50909fa2ce6f66d754120e95f74e9c242776df88a586bd52d2bd1838b600e5f3ce9d45d04865ff39a994632d617e810a4480ce24c882980746bc517a92be027d2ea70e4baece33a763608b1f91e5b00000000451201002b825a65a24e2eb8edadbe27c4716dab993bf1046a66da77268ec87dbdd9dfc80100000000ffffffff57280bc007121a0db854998f72e9a9fd2a690f38abffbd9aa94256330c020000b0f91e5b00000000412027c03b1531ee14db6160a62a0cc8b1a7e93ae122bbc6f2dffec721e0ae308b0e19e68523dd429450612bda3a616b56411b4e35d098e25b7c83f19fd2d8537e970000000000000000")
-
-**Example Result**::
-
-  true
-
-masternode.subscribe
-====================
-
-Returns the status of masternode.
-
-**Signature**
-
-  .. function:: masternode.subscribe(collateral)
-
-  * *collateral*
-
-    The txId and the index of the collateral.
-
-    A masternode collateral is a transaction with a specific amount of
-    coins, it's also known as a masternode identifier.
-
-    i.e. for DASH the required amount is 1,000 DASH or for $PAC is
-    500,000 $PAC.
-
-**Result**
-
-  As this is a subscription, the client will receive a notification
-  when the masternode status changes.
-
-  The status depends on the server the masternode is hosted, the
-  internet connection, the offline time and even the collateral
-  amount, so this subscription notice these changes to the user.
-
-**Example**::
-
-  masternode.subscribe("8c59133e714797650cf69043d05e409bbf45670eed7c4e4a386e52c46f1b5e24-0")
-
-**Example Result**::
-
-  {'method': 'masternode.subscribe', u'jsonrpc': u'2.0', u'result': u'ENABLED', 'params': ['8c59133e714797650cf69043d05e409bbf45670eed7c4e4a386e52c46f1b5e24-0'], u'id': 19}
-
-masternode.list
-===============
-
-Returns the list of masternodes.
-
-**Signature**
-
-  .. function:: masternode.list(payees)
-
-  * *payees*
-
-    An array of masternode payee addresses.
-
-**Result**
-
-  An array with the masternodes information.
-
-**Example**::
-
-  masternode.list("['PDFHmjKLvSGdnWgDJSJX49Rrh0SJtRANcE',
-  'PDFHmjKLvSGdnWgDJSJX49Rrh0SJtRANcF']")
-
-**Example Result**::
-
-    [
-      {
-        "vin": "9d298c00dae8b491d6801f50cab2e0037852cb556c5619ddb07c50421x9a31ab",
-        "status": "ENABLED",
-        "protocol": 70213,
-        "payee": "PDFHmjKLvSGdnWgDJSJX49Rrh0SJtRANcE",
-        "lastseen": "2018-04-01 12:34",
-        "activeseconds": 1258000,
-        "lastpaidtime": "2018-03-10 12:29",
-        "lastpaidblock": 1234,
-        "ip": "1.0.0.1",
-        "paymentposition": 184,
-        "inselection": true,
-        "balance": 510350
-      },
-      {
-        "vin": "9d298c00dae8b491d6801f50cab2e0037852cb556c5619ddb07c50421x9a31ac",
-        "status": "ENABLED",
-        "protocol": 70213,
-        "payee": "PDFHmjKLvSGdnWgDJSJX49Rrh0SJtRANcF",
-        "lastseen": "2018-04-01 12:34",
-        "activeseconds": 1258000,
-        "lastpaidtime": "2018-03-15 05:29",
-        "lastpaidblock": 1234,
-        "ip": "1.0.0.2",
-        "paymentposition": 3333,
-        "inselection": false,
-        "balance": 520700
-      },
-      ...,
-      ...,
-      ...,
-      ...
-    ]
-
-
-ProTx methods (Dash DIP3)
-==============================================
-
-
-protx.diff
-=============================
-
-Returns a diff between two deterministic masternode lists.
-The result also contains proof data.
-
-**Signature**
-
-  .. function:: protx.diff(base_height, height)
-
-  *base_height*
-
-    The starting block height
-
-      *1* <= *base_height*
-
-  *height*
-
-    The ending block height.
-
-      *base_height* <= *height*
-
-
-**Result**
-
-  A dictionary with deterministic masternode lists diff plus proof data
-
-**Example**::
-
-  protx.diff(1, 20000)
-
-**Example Result**::
-
-    {
-      "baseBlockHash": "000000000b866e7fefc7df2b4b37f236175cee9ab6dc925a30c62401d92b7406",
-      "blockHash": "0000000005b3f97e0af8c72f9a96eca720237e374ca860938ba0d7a68471c4d6",
-      "cbTxMerkleTree": "0200000002c9802d02435cfe09e4253bc1ba4875e9a2f920d5d6adf005d5b9306e5322e6f476d885273422c2fe18e8c420d09484f89eaeee7bb7f4e1ff54bddeb94e099a910103",
-      "cbTx": "03000500010000000000000000000000000000000000000000000000000000000000000000ffffffff4b02204e047867335c08fabe6d6d8b2b76b7000000000470393f63424273736170747365743a7265737574736574010000000000000010000015770000000d2f6e6f64655374726174756d2f000000000336c8a119010000001976a914cb594917ad4e5849688ec63f29a0f7f3badb5da688ac6c62c216010000001976a914a3c5284d3cd896815ac815f2dd76a3a71cb3d8e688acba65df02000000001976a9146d649e1c05e89d30809ef39cc8ee1002c0c8c84b88ac00000000260100204e0000b301c3d88e4072305bec5d09e2ed6b836b23af640bcdefd7b8ae7e2ca182dc17",
-      "deletedMNs": [
-      ],
-      "mnList": [
-        {
-          "proRegTxHash": "6f0bdd7034ce8d3a6976a15e4b4442c274b5c1739fb63fc0a50f01425580e17e",
-          "confirmedHash": "000000000be653cd1fbc213239cfec83ca68da657f24cc05305d0be75d34e392",
-          "service": "173.61.30.231:19023",
-          "pubKeyOperator": "8da7ee1a40750868badef2c17d5385480cae7543f8d4d6e5f3c85b37fdd00a6b4f47726b96e7e7c7a3ea68b5d5cb2196",
-          "keyIDVoting": "b35c75cbc69433175d3459843e1f6ebe145bf6a3",
-          "isValid": true
-        }
-      ],
-      "merkleRootMNList": "17dc82a12c7eaeb8d7efcd0b64af236b836bede2095dec5b3072408ed8c301b3"
-    }
-
-protx.info
-=============================
-
-Returns detailed information about a deterministic masternode.
-
-**Signature**
-
-  .. function:: protx.info(protx_hash)
-
-  *protx_hash*
-
-    The hash of the initial ProRegTx.
-
-**Result**
-
-  A dictionary with detailed deterministic masternode data
-
-**Example**::
-
-  protx.info("6f0bdd7034ce8d3a6976a15e4b4442c274b5c1739fb63fc0a50f01425580e17e")
-
-**Example Result**::
-
-  {
-    "proTxHash": "6f0bdd7034ce8d3a6976a15e4b4442c274b5c1739fb63fc0a50f01425580e17e",
-    "collateralHash": "b41439376b6117aebe6ad1ce31dcd217d4934fd00c104029ecb7d21c11d17c94",
-    "collateralIndex": 3,
-    "operatorReward": 0,
-    "state": {
-      "registeredHeight": 19525,
-      "lastPaidHeight": 20436,
-      "PoSePenalty": 0,
-      "PoSeRevivedHeight": -1,
-      "PoSeBanHeight": -1,
-      "revocationReason": 0,
-      "keyIDOwner": "b35c75cbc69433175d3459843e1f6ebe145bf6a3",
-      "pubKeyOperator": "8da7ee1a40750868badef2c17d5385480cae7543f8d4d6e5f3c85b37fdd00a6b4f47726b96e7e7c7a3ea68b5d5cb2196",
-      "keyIDVoting": "b35c75cbc69433175d3459843e1f6ebe145bf6a3",
-      "ownerKeyAddr": "ybGQ7a6e7dkJY2jxdbDwdBtyjKZJ8VB7YC",
-      "votingKeyAddr": "ybGQ7a6e7dkJY2jxdbDwdBtyjKZJ8VB7YC",
-      "addr": "173.61.30.231:19023",
-      "payoutAddress": "yWdXnYxGbouNoo8yMvcbZmZ3Gdp6BpySxL"
-    },
-    "confirmations": 984
-  }
