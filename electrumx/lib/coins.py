@@ -296,7 +296,7 @@ class Avian(Coin):
     GENESIS_HASH = ('000000cdb10fc01df7fba251f2168ef7'
                     'cd7854b571049db4902c315694461dd0')
     DEFAULT_MAX_SEND = 10_000_000
-    X16RT_ACTIVATION_TIME = 1638748799   # algo switch to x16rt at this timestamp
+    X16RT_ACTIVATION_TIME = 1638847406   # algo switch to x16rt at this timestamp
     CROW_ACTIVATION_TIME = 1638847407  # crow dual algo activation time
 
     CHAIN_SIZE = 20_156_386_851
@@ -310,10 +310,15 @@ class Avian(Coin):
     @classmethod
     def header_hash(cls, header):
         timestamp = util.unpack_le_uint32_from(header, 68)[0]
-        if timestamp >= 1638847407: # dual algo
-            import x16rt_hash
-            return x16rt_hash.getPoWHash(header)
-        elif timestamp >= 1638748799: # x16rt
+        version = int(util.unpack_le_int32_from(header)[0])
+        if timestamp >= cls.CROW_ACTIVATION_TIME: # dual algo
+            if (version >> 16) & 0xFF == 0:
+               import x16rt_hash
+               return x16rt_hash.getPoWHash(header)
+            else:
+               import minotaurx_hash
+               return minotaurx_hash.getPoWHash(header)
+        elif timestamp >= cls.X16RT_ACTIVATION_TIME: # x16rt
             import x16rt_hash
             return x16rt_hash.getPoWHash(header)
         else:
