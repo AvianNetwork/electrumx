@@ -1,10 +1,10 @@
-# example of Dockerfile that builds release of electrumx-ravencoin-1.10.0
+# example of Dockerfile that builds release of electrumx-Avian-1.10.0
 # ENV variables can be overrided on the `docker run` command
 
 FROM ubuntu:18.04
 
 WORKDIR /
-ADD https://github.com/Electrum-RVN-SIG/electrumx-ravencoin/archive/v1.10.3.tar.gz /
+ADD https://github.com/AvianNetwork/electrumx/archive/v1.10.3.tar.gz /
 RUN tar zxvf *.tar.gz
 
 RUN apt-get update && \
@@ -18,7 +18,7 @@ RUN python3.8 -m pip install scikit-build
 RUN cd /electrumx* && python3.8 -m pip install -r requirements.txt && python3.8 setup.py install
 
 ENV SERVICES="ssl://:50002,tcp://:50001,rpc://:8000"
-ENV COIN=Ravencoin
+ENV COIN=Avian
 ENV DB_DIRECTORY=/db
 ENV DAEMON_URL="http://username:password@hostname:port/"
 ENV ALLOW_ROOT=true
@@ -30,7 +30,7 @@ ENV EVENT_LOOP_POLICY=uvloop
 ENV SSL_CERTFILE=/db/ssl_cert/server.crt
 ENV SSL_KEYFILE=/db/ssl_cert/server.key
 
-# REQUIRED to connect with the larger electrumx ravencoin server network.
+# REQUIRED to connect with the larger electrumx Avian server network.
 # Full service://(IP/URL):PORT is REQUIRED
 # Example: 
 # env REPORT_SERVICES = ssl://rvn4lyfe.com:50002,tcp://rvn4lyfe.com:50001

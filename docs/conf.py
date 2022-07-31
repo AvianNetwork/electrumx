@@ -21,9 +21,9 @@ from electrumx import version
 
 # -- Project information -----------------------------------------------------
 
-project = 'ElectrumX Ravencoin'
-copyright = '2016-2020, Neil Booth; 2020, kralverde'
-author = 'Neil Booth; kralverde'
+project = 'ElectrumX Avian'
+copyright = '2016-2020, Neil Booth; 2020, kralverde; 2022, alamshafil'
+author = 'Neil Booth; kralverde; alamshafil'
 
 # The full version including branding
 release = version
@@ -90,7 +90,7 @@ html_theme = 'alabaster'
 # documentation.
 #
 html_theme_options = {
-    'description': 'Lightweight Electrum Ravencoin Server in Python',
+    'description': 'Lightweight Electrum Avian Server in Python',
     'github_user': 'Electrum-RVN-SIG',
     'github_repo': 'electrumx',
     'github_button': True,
@@ -147,7 +147,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ElectrumX.tex', 'ElectrumX Ravencoin Documentation',
+    (master_doc, 'ElectrumX.tex', 'ElectrumX Avian Documentation',
      'Neil Booth, kralverde', 'manual'),
 ]
 
@@ -157,7 +157,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'electrumx', 'ElectrumX Ravencoin Documentation',
+    (master_doc, 'electrumx', 'ElectrumX Avian Documentation',
      [author], 1)
 ]
 
@@ -168,7 +168,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ElectrumX', 'ElectrumX Ravencoin Documentation',
+    (master_doc, 'ElectrumX', 'ElectrumX Avian Documentation',
      author, 'ElectrumX', 'One line description of project.',
      'Miscellaneous'),
 ]

@@ -18,3 +18,7 @@ Authors
 * kralverde
 
   Ravencoin conversion
+
+* Shafil Alam
+
+  Avian support

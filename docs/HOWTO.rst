@@ -27,16 +27,16 @@ DB Engine        A database engine package is required; two are
 Some coins need an additional package, typically for their block hash
 functions.  For example, `x11_hash`_ is required for DASH.
 
-You **must** to be running a non-pruning ravencoin daemon with::
+You **must** to be running a non-pruning Avian daemon with::
 
   txindex=1
   assetindex=1
 
 set in its configuration file.  If you have an existing installation
-of ravend and have not previously set this you will need to reindex
+of aviand and have not previously set this you will need to reindex
 the blockchain with::
 
-  ravend -reindex
+  aviand -reindex
 
 which can take some time.
 
@@ -52,7 +52,7 @@ used to either.
 When building the database from the genesis block, ElectrumX has to
 flush large quantities of data to disk and its DB.  You will have a
 better experience if the database directory is on an SSD than on an
-HDD.  Currently to around height 1,750,000 of the Ravencoin blockchain the
+HDD.  Currently to around height 932,458 of the Avian blockchain the
 final size of the leveldb database, and other ElectrumX file metadata
 comes to just over 3GB.  LevelDB needs a bit more for
 brief periods, and the block chain is only getting longer, so I would
@@ -79,7 +79,7 @@ Install the prerequisites above.
 
 Check out the code from Github::
 
-    git clone https://github.com/Electrum-RVN-SIG/electrumx-ravencoin.git
+    git clone https://github.com/AvianNetwork/electrumx.git
     cd electrumx
 
 You can install with :file:`setup.py` or run the code from the source
@@ -422,11 +422,11 @@ You can then set the port as follows and advertise the service externally on the
     REPORT_SSL_PORT=110
 
 
-.. _`contrib/systemd/electrumx.service`: https://github.com/Electrum-RVN-SIG/electrumx-ravencoin/blob/master/contrib/systemd/electrumx.service
+.. _`contrib/systemd/electrumx.service`: https://github.com/AvianNetwork/electrumx/blob/master/contrib/systemd/electrumx.service
 .. _`daemontools`: http://cr.yp.to/daemontools.html
 .. _`runit`: http://smarden.org/runit/index.html
 .. _`aiohttp`: https://pypi.python.org/pypi/aiohttp
 .. _`pylru`: https://pypi.python.org/pypi/pylru
 .. _`x11_hash`: https://pypi.python.org/pypi/x11_hash
-.. _`contrib/raspberrypi3/install_electrumx.sh`: https://github.com/Electrum-RVN-SIG/electrumx-ravencoin/blob/master/contrib/raspberrypi3/install_electrumx.sh
-.. _`contrib/raspberrypi3/run_electrumx.sh`: https://github.com/Electrum-RVN-SIG/electrumx-ravencoin/blob/master/contrib/raspberrypi3/run_electrumx.sh
+.. _`contrib/raspberrypi3/install_electrumx.sh`: https://github.com/AvianNetwork/electrumx/blob/master/contrib/raspberrypi3/install_electrumx.sh
+.. _`contrib/raspberrypi3/run_electrumx.sh`: https://github.com/AvianNetwork/electrumx/blob/master/contrib/raspberrypi3/run_electrumx.sh
