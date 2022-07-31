@@ -305,7 +305,10 @@ class Avian(Coin):
 
     RPC_PORT = 7896
     REORG_LIMIT = 100
-    PEERS = []
+    PEERS = [
+        'electrum-us.avn.network s50002',
+        'electrum-eu.avn.network s50002'
+    ]
 
     @classmethod
     def header_hash(cls, header):
